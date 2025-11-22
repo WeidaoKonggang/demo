@@ -1,0 +1,135 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Bell, Award, Users, Calendar } from 'lucide-react';
+import { format } from 'date-fns';
+
+export default function Notifications() {
+  const navigate = useNavigate();
+
+  const notifications = [
+    {
+      id: 1,
+      type: 'achievement',
+      icon: Award,
+      title: 'New Achievement Unlocked!',
+      message: 'You earned the "Artifact Hunter" badge',
+      time: new Date(Date.now() - 3600000),
+      read: false
+    },
+    {
+      id: 2,
+      type: 'social',
+      icon: Users,
+      title: 'New Follower',
+      message: 'MuseumExplorer started following you',
+      time: new Date(Date.now() - 7200000),
+      read: false
+    },
+    {
+      id: 3,
+      type: 'quest',
+      icon: Calendar,
+      title: 'Quest Reminder',
+      message: 'Complete your daily quest to maintain your streak',
+      time: new Date(Date.now() - 86400000),
+      read: true
+    },
+    {
+      id: 4,
+      type: 'achievement',
+      icon: Award,
+      title: 'Level Up!',
+      message: 'Congratulations! You reached Level 5',
+      time: new Date(Date.now() - 172800000),
+      read: true
+    }
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#0f0f0f] relative">
+      {/* Background matching Home */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center opacity-8"
+        style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1578301978018-3005759f48f7?w=1600')"
+        }}
+      />
+
+      {/* Gradient overlay matching Home */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0f0f0f]/80 via-[#0f0f0f]/50 to-[#0f0f0f]/90" />
+
+      <div className="relative z-10 min-h-screen pt-20">
+        {/* Header */}
+        <div className="px-6 mb-6 flex items-center justify-between">
+          <h1 className="text-white font-semibold text-xl">Notifications</h1>
+          <Button
+            variant="ghost"
+            className="text-amber-400 text-sm"
+          >
+            Mark all read
+          </Button>
+        </div>
+
+        <div className="px-6 space-y-3">
+          {notifications.map((notification) => (
+            <div
+              key={notification.id}
+              className={`backdrop-blur-2xl border rounded-2xl p-4 shadow-xl transition-all ${
+                notification.read
+                  ? 'bg-white/[0.02] border-white/5'
+                  : 'bg-amber-400/5 border-amber-400/20'
+              }`}
+            >
+              <div className="flex gap-3">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  notification.read ? 'bg-white/5' : 'bg-amber-400/10'
+                }`}>
+                  <notification.icon className={`w-5 h-5 ${
+                    notification.read ? 'text-gray-400' : 'text-amber-400'
+                  }`} />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-white font-semibold mb-1">{notification.title}</h3>
+                  <p className="text-gray-400 text-sm mb-2">{notification.message}</p>
+                  <p className="text-gray-500 text-xs">
+                    {format(notification.time, 'MMM d, h:mm a')}
+                  </p>
+                </div>
+                {!notification.read && (
+                  <div className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0 mt-2" />
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Settings */}
+        <div className="px-6 mt-8">
+          <div className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-2xl p-6 shadow-xl">
+            <h3 className="text-white font-semibold mb-4">Notification Settings</h3>
+            <div className="space-y-3">
+              <label className="flex items-center justify-between">
+                <span className="text-gray-300">Quest Reminders</span>
+                <input type="checkbox" defaultChecked className="w-5 h-5" />
+              </label>
+              <label className="flex items-center justify-between">
+                <span className="text-gray-300">Achievement Alerts</span>
+                <input type="checkbox" defaultChecked className="w-5 h-5" />
+              </label>
+              <label className="flex items-center justify-between">
+                <span className="text-gray-300">Social Updates</span>
+                <input type="checkbox" defaultChecked className="w-5 h-5" />
+              </label>
+              <label className="flex items-center justify-between">
+                <span className="text-gray-300">Email Notifications</span>
+                <input type="checkbox" className="w-5 h-5" />
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
