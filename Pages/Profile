@@ -1,0 +1,356 @@
+import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, User, Award, Calendar, LogOut, Settings, Bell, Crown, X, Check, Sparkles } from 'lucide-react';
+
+export default function Profile() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  // Check if we should show upgrade modal from URL parameter
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('upgrade') === 'true') {
+      setShowUpgradeModal(true);
+    }
+  }, [location.search]);
+
+  // Fetch current user
+  const { data: user, isLoading } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me()
+  });
+
+  const stats = [
+    { label: "Total XP", value: "850", icon: Award },
+    { label: "Artifacts Collected", value: "24", icon: Award },
+    { label: "Quests Completed", value: "18", icon: Award },
+    { label: "Days Active", value: "12", icon: Calendar }
+  ];
+
+  const membershipPlans = [
+    {
+      id: 1,
+      name: 'Ad-Skip Bundle',
+      price: '$5',
+      description: '30 Ad-Skip Tokens',
+      features: ['Skip ads 30 times', 'No interruptions', 'Instant activation'],
+      gradient: 'from-blue-500/20 to-cyan-500/20',
+      border: 'border-blue-400/40'
+    },
+    {
+      id: 2,
+      name: 'Gallery Unlock',
+      price: '$10',
+      description: 'Unlock 1 Exclusive Gallery',
+      features: ['All artifacts unlocked', 'Exclusive content', 'Audio guides included'],
+      gradient: 'from-purple-500/20 to-pink-500/20',
+      border: 'border-purple-400/40'
+    },
+    {
+      id: 3,
+      name: 'Premium Access',
+      price: '$20',
+      description: 'All Galleries Access',
+      features: ['Unlimited galleries', 'Priority support', 'Exclusive badges'],
+      gradient: 'from-amber-500/20 to-yellow-500/20',
+      border: 'border-amber-400/40',
+      badge: 'POPULAR'
+    },
+    {
+      id: 4,
+      name: 'Lifetime Pass',
+      price: '$30',
+      description: 'Lifetime Premium Access',
+      features: ['Lifetime access', 'All future galleries', 'Collector badge', 'VIP support'],
+      gradient: 'from-rose-500/20 to-red-500/20',
+      border: 'border-rose-400/40',
+      badge: 'BEST VALUE'
+    }
+  ];
+
+  const handlePurchase = () => {
+    if (!selectedPlan) return;
+    setShowUpgradeModal(false);
+    setShowSuccess(true);
+    setTimeout(() => {
+      setShowSuccess(false);
+      setSelectedPlan(null);
+    }, 2500);
+  };
+
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  const handleLogout = async () => {
+    await base44.auth.logout();
+    navigate(createPageUrl('Welcome'));
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#0f0f0f] relative">
+      {/* Background matching Home */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center opacity-8"
+        style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1578301978018-3005759f48f7?w=1600')"
+        }}
+      />
+
+      {/* Gradient overlay matching Home */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0f0f0f]/80 via-[#0f0f0f]/50 to-[#0f0f0f]/90" />
+
+      <div className="relative z-10 min-h-screen pt-20">
+        {/* Header */}
+        <div className="px-6 mb-6 text-center">
+          <h1 className="text-white font-semibold text-xl">Profile</h1>
+        </div>
+
+        <div className="px-6 space-y-6">
+          {/* Profile card */}
+          <div className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-2xl p-6 shadow-xl">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center text-black font-bold text-2xl shadow-lg shadow-amber-400/20">
+                {getInitials(user?.full_name)}
+              </div>
+              <div>
+                <h2 className="text-white font-bold text-xl mb-1">{user?.full_name || 'Explorer'}</h2>
+                <p className="text-gray-400 text-sm">{user?.email}</p>
+              </div>
+            </div>
+
+            {/* Level progress */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Level 5</span>
+                <span className="text-amber-400 font-medium">850 / 1000 XP</span>
+              </div>
+              <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full shadow-lg shadow-amber-400/30" style={{ width: '85%' }} />
+              </div>
+              <p className="text-gray-400 text-xs text-center">150 XP until next level</p>
+            </div>
+          </div>
+
+          {/* Upgrade Button */}
+          <button
+            onClick={() => setShowUpgradeModal(true)}
+            className="w-full backdrop-blur-2xl bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border-2 border-amber-400/30 rounded-2xl p-6 shadow-xl hover:shadow-2xl hover:border-amber-400/60 transition-all group"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center shadow-lg shadow-amber-400/30">
+                  <Crown className="w-7 h-7 text-black" />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-white font-bold text-lg mb-1">Upgrade to Premium</h3>
+                  <p className="text-amber-400 text-sm font-medium">Unlock exclusive experiences</p>
+                </div>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-amber-400/20 flex items-center justify-center group-hover:bg-amber-400/30 transition-colors">
+                <Sparkles className="w-5 h-5 text-amber-400" />
+              </div>
+            </div>
+          </button>
+
+          {/* Stats grid */}
+          <div className="grid grid-cols-2 gap-4">
+            {stats.map((stat, index) => (
+              <div key={index} className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-2xl p-4 shadow-xl">
+                <div className="flex items-center gap-2 mb-2">
+                  <stat.icon className="w-4 h-4 text-amber-400" />
+                  <span className="text-gray-400 text-xs">{stat.label}</span>
+                </div>
+                <div className="text-2xl font-bold text-white">{stat.value}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Settings */}
+          <div className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden shadow-xl">
+            <button 
+              onClick={() => navigate(createPageUrl('AccountSettings'))}
+              className="w-full flex items-center gap-3 p-4 hover:bg-white/[0.04] transition-all border-b border-white/5"
+            >
+              <Settings className="w-5 h-5 text-gray-400" />
+              <span className="text-white">Account Settings</span>
+            </button>
+            <button 
+              onClick={() => navigate(createPageUrl('Notifications'))}
+              className="w-full flex items-center gap-3 p-4 hover:bg-white/[0.04] transition-all border-b border-white/5"
+            >
+              <Bell className="w-5 h-5 text-gray-400" />
+              <span className="text-white">Notifications</span>
+            </button>
+            <button 
+              onClick={() => navigate(createPageUrl('EditProfile'))}
+              className="w-full flex items-center gap-3 p-4 hover:bg-white/[0.04] transition-all"
+            >
+              <User className="w-5 h-5 text-gray-400" />
+              <span className="text-white">Edit Profile</span>
+            </button>
+          </div>
+
+          {/* Achievements */}
+          <div className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-2xl p-6 shadow-xl">
+            <h3 className="text-white font-semibold mb-4">Recent Achievements</h3>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-3 backdrop-blur-2xl bg-white/[0.02] rounded-xl border border-white/5">
+                <div className="text-2xl">🏆</div>
+                <div>
+                  <p className="text-white font-medium">First Quest</p>
+                  <p className="text-gray-400 text-xs">Completed your first quest</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-3 backdrop-blur-2xl bg-white/[0.02] rounded-xl border border-white/5">
+                <div className="text-2xl">📸</div>
+                <div>
+                  <p className="text-white font-medium">Artifact Hunter</p>
+                  <p className="text-gray-400 text-xs">Scanned 10 artifacts</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Logout */}
+          <Button
+            onClick={handleLogout}
+            variant="outline"
+            className="w-full border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300 py-6"
+          >
+            <LogOut className="w-5 h-5 mr-2" />
+            Logout
+          </Button>
+        </div>
+      </div>
+
+      {/* Upgrade Modal */}
+      {showUpgradeModal && (
+        <div 
+          className="fixed inset-0 bg-[#0f0f0f]/80 backdrop-blur-md z-50 flex items-center justify-center p-6"
+          onClick={() => setShowUpgradeModal(false)}
+        >
+          <div 
+            className="backdrop-blur-2xl bg-[#1a1a1a]/95 border border-amber-400/20 rounded-3xl max-w-2xl w-full shadow-2xl animate-in zoom-in-95 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="relative p-8 border-b border-amber-400/10">
+              <button
+                onClick={() => setShowUpgradeModal(false)}
+                className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/[0.05] hover:bg-white/[0.1] flex items-center justify-center transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-400" />
+              </button>
+              
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-amber-400/20 to-amber-500/20 mb-4">
+                  <Crown className="w-8 h-8 text-amber-400" />
+                </div>
+                <h2 className="text-3xl font-bold text-white mb-2">
+                  Become a TimeLens Premium Member
+                </h2>
+                <p className="text-gray-400">Unlock exclusive experiences and collectibles</p>
+              </div>
+            </div>
+
+            {/* Plans Grid */}
+            <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto">
+              {membershipPlans.map((plan) => (
+                <button
+                  key={plan.id}
+                  onClick={() => setSelectedPlan(plan)}
+                  className={`relative backdrop-blur-xl bg-gradient-to-br ${plan.gradient} border-2 rounded-2xl p-6 text-left transition-all hover:scale-[1.02] ${
+                    selectedPlan?.id === plan.id
+                      ? `${plan.border} shadow-lg`
+                      : 'border-white/10 hover:border-white/20'
+                  }`}
+                >
+                  {plan.badge && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-amber-400 rounded-full text-black text-xs font-bold">
+                      {plan.badge}
+                    </div>
+                  )}
+                  
+                  {selectedPlan?.id === plan.id && (
+                    <div className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-amber-400 flex items-center justify-center shadow-lg">
+                      <Check className="w-5 h-5 text-black" />
+                    </div>
+                  )}
+
+                  <div className="mb-4">
+                    <h3 className="text-white font-bold text-xl mb-1">{plan.name}</h3>
+                    <p className="text-gray-300 text-sm mb-3">{plan.description}</p>
+                    <div className="text-3xl font-bold text-amber-400">{plan.price}</div>
+                  </div>
+
+                  <div className="space-y-2">
+                    {plan.features.map((feature, idx) => (
+                      <div key={idx} className="flex items-center gap-2 text-gray-300 text-sm">
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                        <span>{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Footer */}
+            <div className="p-8 border-t border-amber-400/10">
+              <Button
+                onClick={handlePurchase}
+                disabled={!selectedPlan}
+                className="w-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-black font-bold py-6 rounded-xl text-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-amber-400/30"
+              >
+                {selectedPlan ? `Confirm & Pay ${selectedPlan.price}` : 'Select a Plan'}
+              </Button>
+              <p className="text-center text-gray-500 text-xs mt-3">
+                All purchases are virtual and non-refundable.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {showSuccess && selectedPlan && (
+        <div className="fixed inset-0 bg-[#0f0f0f]/90 z-50 flex items-center justify-center p-6 backdrop-blur-sm">
+          <div className="backdrop-blur-2xl bg-white/[0.05] border border-white/10 rounded-3xl overflow-hidden max-w-sm w-full shadow-2xl animate-in fade-in zoom-in duration-300">
+            <div className="p-8 text-center">
+              <div className="w-20 h-20 rounded-full bg-green-500/20 border-2 border-green-400 flex items-center justify-center mx-auto mb-6">
+                <Check className="w-10 h-10 text-green-400" />
+              </div>
+              <h3 className="text-white font-bold text-2xl mb-2">Welcome to Premium!</h3>
+              <p className="text-gray-300 mb-4">
+                You've successfully unlocked <span className="text-amber-400 font-semibold">{selectedPlan.name}</span>
+              </p>
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-amber-400/20 to-amber-500/20 mb-4">
+                <Crown className="w-8 h-8 text-amber-400" />
+              </div>
+              <p className="text-gray-400 text-sm">
+                All features are now active and ready to use
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
