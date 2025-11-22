@@ -1,0 +1,33 @@
+{
+  "name": "Post",
+  "type": "object",
+  "properties": {
+    "content": {
+      "type": "string",
+      "description": "Post content text"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Optional post image URL"
+    },
+    "video_url": {
+      "type": "string",
+      "description": "Optional post video URL"
+    },
+    "likes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Array of user emails who liked this post"
+    },
+    "artifact_reference": {
+      "type": "string",
+      "description": "Optional reference to artifact"
+    }
+  },
+  "required": [
+    "content"
+  ]
+}
