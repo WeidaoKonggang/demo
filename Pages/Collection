@@ -1,0 +1,153 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Lock, CheckCircle2, Search } from 'lucide-react';
+
+export default function Collection() {
+  const navigate = useNavigate();
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [filter, setFilter] = useState('all');
+
+  const artifacts = [
+    { id: 1, name: "Ancient Greek Vase", era: "Ancient Greece", unlocked: true, image: "🏺" },
+    { id: 2, name: "Egyptian Statue", era: "Ancient Egypt", unlocked: true, image: "🗿" },
+    { id: 3, name: "Renaissance Painting", era: "Renaissance", unlocked: true, image: "🖼️" },
+    { id: 4, name: "Roman Coin", era: "Ancient Rome", unlocked: false, image: "🪙" },
+    { id: 5, name: "Chinese Vase", era: "Ancient China", unlocked: false, image: "🏺" },
+    { id: 6, name: "Viking Helmet", era: "Viking Age", unlocked: false, image: "⚔️" }
+  ];
+
+  const unlocked = artifacts.filter(a => a.unlocked).length;
+  const total = artifacts.length;
+
+  return (
+    <div className="min-h-screen bg-[#0f0f0f] relative">
+      {/* Background matching Home */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center opacity-8"
+        style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1578301978018-3005759f48f7?w=1600')"
+        }}
+      />
+
+      {/* Gradient overlay matching Home */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0f0f0f]/80 via-[#0f0f0f]/50 to-[#0f0f0f]/90" />
+
+      <div className="relative z-10 min-h-screen pt-20">
+        {/* Header */}
+        <div className="px-6 mb-6 text-center">
+          <h1 className="text-white font-semibold text-xl">Collection Book</h1>
+        </div>
+
+        <div className="px-6 space-y-6">
+          {/* Progress */}
+          <div className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-2xl p-6 shadow-xl">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h2 className="text-white font-semibold text-xl mb-1">Your Progress</h2>
+                <p className="text-gray-400 text-sm">Keep exploring to unlock more!</p>
+              </div>
+              <div className="text-right">
+                <div className="text-3xl font-bold text-amber-400">{unlocked}/{total}</div>
+                <div className="text-gray-400 text-xs">Unlocked</div>
+              </div>
+            </div>
+            <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all shadow-lg shadow-amber-400/30"
+                style={{ width: `${(unlocked / total) * 100}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Search and filter */}
+          <div className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-2xl p-4 shadow-xl">
+            <div className="flex items-center gap-3">
+              <Search className="w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search artifacts..."
+                className="flex-1 bg-transparent text-white placeholder-gray-400 outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Filters */}
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {['all', 'Ancient Greece', 'Ancient Egypt', 'Renaissance'].map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`px-4 py-2 rounded-full whitespace-nowrap transition-all ${
+                  filter === f
+                    ? 'bg-amber-400 text-black font-semibold shadow-lg shadow-amber-400/20'
+                    : 'backdrop-blur-2xl bg-white/[0.02] border border-white/5 text-gray-300 hover:bg-white/[0.04]'
+                }`}
+              >
+                {f.charAt(0).toUpperCase() + f.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          {/* Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            {artifacts.map((artifact) => (
+              <button
+                key={artifact.id}
+                onClick={() => artifact.unlocked && setSelectedItem(artifact)}
+                className={`backdrop-blur-2xl border rounded-2xl p-6 text-center transition-all shadow-xl ${
+                  artifact.unlocked
+                    ? 'bg-white/[0.02] border-white/5 hover:bg-white/[0.04] hover:border-amber-400/30'
+                    : 'bg-white/[0.02] border-white/5 opacity-50'
+                }`}
+              >
+                <div className="relative mb-4">
+                  <div className="text-5xl">
+                    {artifact.unlocked ? artifact.image : '?'}
+                  </div>
+                  {artifact.unlocked ? (
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                      <CheckCircle2 className="w-4 h-4 text-white" />
+                    </div>
+                  ) : (
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center">
+                      <Lock className="w-3 h-3 text-white" />
+                    </div>
+                  )}
+                </div>
+                <h3 className={`font-semibold mb-1 ${artifact.unlocked ? 'text-white' : 'text-gray-500'}`}>
+                  {artifact.unlocked ? artifact.name : 'Locked'}
+                </h3>
+                <p className="text-gray-400 text-xs">{artifact.era}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Detail modal */}
+      {selectedItem && (
+        <div className="fixed inset-0 bg-[#0f0f0f]/90 z-50 flex items-center justify-center p-6 backdrop-blur-sm" onClick={() => setSelectedItem(null)}>
+          <div className="backdrop-blur-2xl bg-white/[0.02] border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="text-center">
+              <div className="text-6xl mb-4">{selectedItem.image}</div>
+              <h3 className="text-white font-bold text-xl mb-2">{selectedItem.name}</h3>
+              <p className="text-amber-400 mb-3">{selectedItem.era}</p>
+              <p className="text-gray-300 mb-6">
+                This magnificent artifact represents the rich cultural heritage of {selectedItem.era}. 
+                You unlocked it by completing your quest!
+              </p>
+              <Button
+                onClick={() => setSelectedItem(null)}
+                className="w-full bg-amber-400 hover:bg-amber-500 text-black font-semibold shadow-lg shadow-amber-400/20"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
