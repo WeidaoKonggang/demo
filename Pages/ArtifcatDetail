@@ -1,0 +1,176 @@
+import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Sparkles, Calendar, MapPin } from 'lucide-react';
+
+const artifacts = [
+  {
+    id: 1,
+    name: "Rosetta Stone",
+    subtitle: "Ancient Egyptian Decree",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Rosetta_Stone.JPG/800px-Rosetta_Stone.JPG",
+    period: "196 BCE",
+    origin: "Rosetta, Egypt",
+    description: "The Rosetta Stone is a granodiorite stele inscribed with three versions of a decree issued in Memphis, Egypt. The top and middle texts are in Ancient Egyptian using hieroglyphic and Demotic scripts, while the bottom is in Ancient Greek. This stone was the key to deciphering Egyptian hieroglyphs.",
+    context: "Discovered in 1799 by French soldiers during Napoleon's Egyptian campaign, the Rosetta Stone provided the breakthrough that allowed scholars to read ancient Egyptian hieroglyphics for the first time in over 1,400 years. It is one of the most important archaeological discoveries in history."
+  },
+  {
+    id: 2,
+    name: "Tutankhamun's Death Mask",
+    subtitle: "Golden Burial Mask",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/CairoEgMuseumTaaMaskMostlyPhotographed.jpg/800px-CairoEgMuseumTaaMaskMostlyPhotographed.jpg",
+    period: "1323 BCE",
+    origin: "Valley of the Kings, Egypt",
+    description: "This iconic gold funeral mask was placed over the face of the mummified pharaoh Tutankhamun. Made of solid gold and inlaid with semi-precious stones and colored glass, it weighs approximately 10.23 kg. The mask depicts the young pharaoh with the traditional false beard and striped nemes headdress.",
+    context: "Discovered by Howard Carter in 1922 in Tutankhamun's nearly intact tomb, this mask has become one of the most recognizable symbols of ancient Egypt. The tomb's discovery was one of the most significant archaeological finds of the 20th century, revealing unprecedented insights into Egyptian royal burial practices."
+  },
+  {
+    id: 3,
+    name: "Venus de Milo",
+    subtitle: "Ancient Greek Sculpture",
+    image: "https://s.rfi.fr/media/display/0e0a2dc0-0fd6-11ea-b226-005056a99247/w:1024/p:16x9/venus_de_milo_louvre_bodycantwait.jpg",
+    period: "130-100 BCE",
+    origin: "Milos Island, Greece",
+    description: "The Venus de Milo is an ancient Greek statue depicting Aphrodite, the goddess of love and beauty. Standing over 2 meters tall and carved from marble, this masterpiece is famous for its missing arms and idealized beauty. The statue exemplifies the Hellenistic style with its graceful contrapposto pose.",
+    context: "Discovered in 1820 by a Greek peasant on the island of Milos, the Venus de Milo quickly became one of the most celebrated works of ancient Greek sculpture. Now housed in the Louvre Museum in Paris, it represents the artistic achievements of the Hellenistic period and continues to influence art and culture worldwide."
+  },
+  {
+    id: 4,
+    name: "Terracotta Army",
+    subtitle: "Qin Dynasty Warriors",
+    image: "https://terracottawarriorsmuseum.com/wp-content/uploads/2024/08/Terracotta-Warriors-museum-1200x700.jpg",
+    period: "210-209 BCE",
+    origin: "Xi'an, China",
+    description: "The Terracotta Army consists of thousands of life-sized clay soldiers, horses, and chariots buried with China's first emperor, Qin Shi Huang. Each warrior has unique facial features and was originally painted in vibrant colors. This massive archaeological site demonstrates extraordinary ancient Chinese craftsmanship.",
+    context: "Discovered in 1974 by local farmers digging a well, the Terracotta Army has become one of the most significant archaeological finds of the 20th century. Over 8,000 soldiers, 130 chariots, and 670 horses have been uncovered, all created to protect the emperor in the afterlife."
+  },
+  {
+    id: 5,
+    name: "Moai Statues",
+    subtitle: "Easter Island Monoliths",
+    image: "https://cdn.mos.cms.futurecdn.net/PeLSpepSTzYeCwDv6YSoVn.jpg",
+    period: "1250-1500 CE",
+    origin: "Easter Island, Chile",
+    description: "The Moai are monolithic human figures carved by the Rapa Nui people on Easter Island. These massive statues, averaging 4 meters tall and weighing 14 tons, were carved from compressed volcanic ash. They feature oversized heads and are believed to represent deified ancestors.",
+    context: "Nearly 1,000 Moai statues were created between 1250 and 1500 CE, with most placed on massive stone platforms called ahu along the coast. The transportation and erection of these enormous statues remains a subject of archaeological debate and demonstrates the remarkable engineering capabilities of the Rapa Nui civilization."
+  }
+];
+
+export default function ArtifactDetail() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Get artifact ID from URL parameter, default to 1
+  const params = new URLSearchParams(location.search);
+  const artifactId = parseInt(params.get('id')) || 1;
+  
+  // Find the artifact, fallback to first one if not found
+  const artifact = artifacts.find(a => a.id === artifactId) || artifacts[0];
+
+  return (
+    <div className="min-h-screen bg-[#0f0f0f] relative">
+      {/* Background matching Home */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center opacity-8"
+        style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1578301978018-3005759f48f7?w=1600')"
+        }}
+      />
+
+      {/* Gradient overlay matching Home */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0f0f0f]/80 via-[#0f0f0f]/50 to-[#0f0f0f]/90" />
+
+      <div className="relative z-10 min-h-screen pb-24">
+        {/* Header */}
+        <div className="p-6 flex items-center justify-between">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(createPageUrl('Home'))}
+            className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 text-white hover:bg-white/[0.04]"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <h1 className="text-white font-semibold">Artifact Details</h1>
+          <div className="w-10" />
+        </div>
+
+        <div className="px-6 space-y-6">
+          {/* Artifact image */}
+          <div className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-3xl overflow-hidden shadow-xl">
+            <img
+              src={artifact.image}
+              alt={artifact.name}
+              className="w-full h-64 object-cover"
+            />
+          </div>
+
+          {/* Title card */}
+          <div className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-2xl p-6 shadow-xl">
+            <h2 className="text-2xl font-bold text-white mb-2">{artifact.name}</h2>
+            <p className="text-amber-400 font-medium">{artifact.subtitle}</p>
+          </div>
+
+          {/* Meta info */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-xl p-4 shadow-xl">
+              <div className="flex items-center gap-2 mb-2">
+                <Calendar className="w-4 h-4 text-amber-400" />
+                <span className="text-gray-400 text-sm">Period</span>
+              </div>
+              <p className="text-white font-semibold">{artifact.period}</p>
+            </div>
+            <div className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-xl p-4 shadow-xl">
+              <div className="flex items-center gap-2 mb-2">
+                <MapPin className="w-4 h-4 text-amber-400" />
+                <span className="text-gray-400 text-sm">Origin</span>
+              </div>
+              <p className="text-white font-semibold">{artifact.origin}</p>
+            </div>
+          </div>
+
+          {/* Description */}
+          <div className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-2xl p-6 shadow-xl">
+            <h3 className="text-white font-semibold mb-3">Description</h3>
+            <p className="text-gray-300 leading-relaxed">
+              {artifact.description}
+            </p>
+          </div>
+
+          {/* Historical Context */}
+          <div className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-2xl p-6 shadow-xl">
+            <h3 className="text-white font-semibold mb-3">Historical Context</h3>
+            <p className="text-gray-300 leading-relaxed">
+              {artifact.context}
+            </p>
+          </div>
+
+          {/* Companion message */}
+          <div className="backdrop-blur-2xl bg-amber-400/5 border border-amber-400/20 rounded-2xl p-6 shadow-xl">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-amber-400/10 flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-5 h-5 text-amber-400" />
+              </div>
+              <div>
+                <p className="text-amber-400 font-medium mb-2">AI Companion:</p>
+                <p className="text-white leading-relaxed mb-4">
+                  Amazing find! This artifact contains many secrets. Now that you have completed the Artifact Study, 
+                  answer the questions and complete the tasks to unlock the corresponding image.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Action button */}
+          <Button
+            onClick={() => navigate(createPageUrl('Quest') + `?id=${artifact.id}`)}
+            className="w-full bg-amber-400 hover:bg-amber-500 text-black font-semibold py-6 rounded-xl text-lg shadow-lg shadow-amber-400/20"
+          >
+            Start Quest Challenge
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
