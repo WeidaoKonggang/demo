@@ -1,0 +1,390 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { base44 } from '@/api/base44Client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { ArrowLeft, Heart, MessageCircle, Send, Plus, X, Upload, Image as ImageIcon, Video, Play } from 'lucide-react';
+import { format } from 'date-fns';
+
+export default function Community() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [showCreatePost, setShowCreatePost] = useState(false);
+  const [newPostContent, setNewPostContent] = useState('');
+  const [imagePreview, setImagePreview] = useState(null);
+  const [videoPreview, setVideoPreview] = useState(null);
+  const [expandedComments, setExpandedComments] = useState({});
+  const [newComments, setNewComments] = useState({});
+
+  // Fetch current user
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me()
+  });
+
+  // Fetch posts
+  const { data: posts = [], isLoading } = useQuery({
+    queryKey: ['posts'],
+    queryFn: () => base44.entities.Post.list('-created_date')
+  });
+
+  // Fetch comments
+  const { data: comments = [] } = useQuery({
+    queryKey: ['comments'],
+    queryFn: () => base44.entities.Comment.list()
+  });
+
+  // Create post mutation
+  const createPostMutation = useMutation({
+    mutationFn: (postData) => base44.entities.Post.create(postData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      setShowCreatePost(false);
+      setNewPostContent('');
+      setImagePreview(null);
+      setVideoPreview(null);
+    }
+  });
+
+  // Like/unlike mutation
+  const toggleLikeMutation = useMutation({
+    mutationFn: ({ postId, likes }) => base44.entities.Post.update(postId, { likes }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+    }
+  });
+
+  // Create comment mutation
+  const createCommentMutation = useMutation({
+    mutationFn: (commentData) => base44.entities.Comment.create(commentData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comments'] });
+      setNewComments({});
+    }
+  });
+
+  const handleCreatePost = () => {
+    if (!newPostContent.trim()) return;
+    
+    createPostMutation.mutate({
+      content: newPostContent,
+      image_url: imagePreview,
+      video_url: videoPreview,
+      likes: []
+    });
+  };
+
+  const handleToggleLike = (post) => {
+    if (!currentUser) return;
+    const currentLikes = post.likes || [];
+    const hasLiked = currentLikes.includes(currentUser.email);
+    
+    const newLikes = hasLiked
+      ? currentLikes.filter(email => email !== currentUser.email)
+      : [...currentLikes, currentUser.email];
+    
+    toggleLikeMutation.mutate({ postId: post.id, likes: newLikes });
+  };
+
+  const handleAddComment = (postId) => {
+    const content = newComments[postId];
+    if (!content?.trim()) return;
+
+    createCommentMutation.mutate({
+      post_id: postId,
+      content: content
+    });
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleVideoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setVideoPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const getPostComments = (postId) => {
+    return comments.filter(comment => comment.post_id === postId);
+  };
+
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  const getTimeAgo = (date) => {
+    const now = new Date();
+    const postDate = new Date(date);
+    const diffInSeconds = Math.floor((now - postDate) / 1000);
+    
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    return format(postDate, 'MMM d');
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#0f0f0f] relative">
+      {/* Background matching Home */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center opacity-8"
+        style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1578301978018-3005759f48f7?w=1600')"
+        }}
+      />
+
+      {/* Gradient overlay matching Home */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0f0f0f]/80 via-[#0f0f0f]/50 to-[#0f0f0f]/90" />
+
+      <div className="relative z-10 min-h-screen pt-20">
+        {/* Header */}
+        <div className="px-6 mb-6 text-center">
+          <h1 className="text-white font-semibold text-xl">Community</h1>
+        </div>
+
+        <div className="px-6 space-y-4 pb-24">
+          {/* Posts */}
+          {posts.map((post) => {
+            const postComments = getPostComments(post.id);
+            const isExpanded = expandedComments[post.id];
+            const hasLiked = currentUser && (post.likes || []).includes(currentUser.email);
+
+            return (
+              <div key={post.id} className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden shadow-xl">
+                {/* Post Header */}
+                <div className="p-4 border-b border-white/5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center text-black font-bold">
+                      {getInitials(post.created_by)}
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold">{post.created_by?.split('@')[0] || 'User'}</p>
+                      <p className="text-gray-400 text-xs">{getTimeAgo(post.created_date)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Post Content */}
+                <div className="p-4">
+                  <p className="text-white leading-relaxed mb-3">{post.content}</p>
+                  
+                  {/* Image */}
+                  {post.image_url && (
+                    <div className="rounded-xl overflow-hidden mb-3">
+                      <img 
+                        src={post.image_url} 
+                        alt="Post" 
+                        className="w-full object-cover max-h-96"
+                      />
+                    </div>
+                  )}
+
+                  {/* Video */}
+                  {post.video_url && (
+                    <div className="relative rounded-xl overflow-hidden mb-3 bg-black/50">
+                      <video 
+                        src={post.video_url}
+                        className="w-full object-cover max-h-96"
+                        controls
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                          <Play className="w-8 h-8 text-white ml-1" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Post Actions */}
+                <div className="px-4 py-3 border-t border-white/5 flex items-center gap-4">
+                  <button
+                    onClick={() => handleToggleLike(post)}
+                    className="flex items-center gap-2 text-gray-400 hover:text-red-400 transition-colors"
+                  >
+                    <Heart className={`w-5 h-5 ${hasLiked ? 'fill-red-400 text-red-400' : ''}`} />
+                    <span className="text-sm">{(post.likes || []).length}</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => setExpandedComments(prev => ({ ...prev, [post.id]: !prev[post.id] }))}
+                    className="flex items-center gap-2 text-gray-400 hover:text-amber-400 transition-colors"
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                    <span className="text-sm">{postComments.length}</span>
+                  </button>
+                </div>
+
+                {/* Comments Section */}
+                {isExpanded && (
+                  <div className="border-t border-white/5 p-4 space-y-3 bg-white/[0.02]">
+                    {postComments.map((comment) => (
+                      <div key={comment.id} className="flex gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                          {getInitials(comment.created_by)}
+                        </div>
+                        <div className="flex-1 backdrop-blur-xl bg-white/[0.05] rounded-xl p-3">
+                          <p className="text-white text-sm font-semibold mb-1">
+                            {comment.created_by?.split('@')[0] || 'User'}
+                          </p>
+                          <p className="text-gray-300 text-sm">{comment.content}</p>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Add Comment */}
+                    <div className="flex gap-2 pt-2">
+                      <input
+                        type="text"
+                        placeholder="Write a comment..."
+                        value={newComments[post.id] || ''}
+                        onChange={(e) => setNewComments(prev => ({ ...prev, [post.id]: e.target.value }))}
+                        className="flex-1 bg-white/[0.05] border border-white/10 rounded-xl px-4 py-2 text-white placeholder-gray-400 outline-none focus:border-amber-400/50"
+                      />
+                      <Button
+                        onClick={() => handleAddComment(post.id)}
+                        size="icon"
+                        className="bg-amber-400 hover:bg-amber-500 text-black rounded-xl"
+                      >
+                        <Send className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Floating Create Button */}
+      <button
+        onClick={() => setShowCreatePost(true)}
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 shadow-lg shadow-amber-400/30 flex items-center justify-center hover:scale-110 transition-transform z-20"
+      >
+        <Plus className="w-6 h-6 text-black" />
+      </button>
+
+      {/* Create Post Modal */}
+      {showCreatePost && (
+        <div className="fixed inset-0 bg-[#0f0f0f]/90 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm">
+          <div className="backdrop-blur-2xl bg-white/[0.05] border border-white/10 rounded-t-3xl sm:rounded-3xl w-full sm:max-w-lg sm:w-full shadow-2xl animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 duration-300">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-white/10">
+              <h2 className="text-white font-bold text-xl">Create Post</h2>
+              <button
+                onClick={() => {
+                  setShowCreatePost(false);
+                  setNewPostContent('');
+                  setImagePreview(null);
+                  setVideoPreview(null);
+                }}
+                className="w-10 h-10 rounded-full bg-white/[0.05] hover:bg-white/[0.1] flex items-center justify-center transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-400" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-4">
+              <Textarea
+                placeholder="Share your museum experience..."
+                value={newPostContent}
+                onChange={(e) => setNewPostContent(e.target.value)}
+                className="min-h-32 bg-white/[0.05] border-white/10 text-white placeholder-gray-400 resize-none"
+              />
+
+              {/* Media Previews */}
+              {imagePreview && (
+                <div className="relative rounded-xl overflow-hidden">
+                  <img src={imagePreview} alt="Preview" className="w-full max-h-64 object-cover" />
+                  <button
+                    onClick={() => setImagePreview(null)}
+                    className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center hover:bg-black/70"
+                  >
+                    <X className="w-4 h-4 text-white" />
+                  </button>
+                </div>
+              )}
+
+              {videoPreview && (
+                <div className="relative rounded-xl overflow-hidden bg-black/50">
+                  <video src={videoPreview} className="w-full max-h-64 object-cover" controls />
+                  <button
+                    onClick={() => setVideoPreview(null)}
+                    className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center hover:bg-black/70"
+                  >
+                    <X className="w-4 h-4 text-white" />
+                  </button>
+                </div>
+              )}
+
+              {/* Upload Buttons */}
+              <div className="flex gap-3">
+                <label className="flex-1 cursor-pointer">
+                  <div className="backdrop-blur-xl bg-white/[0.05] border-2 border-dashed border-white/10 hover:border-amber-400/50 rounded-xl p-4 flex items-center justify-center gap-2 transition-all hover:bg-white/[0.08]">
+                    <ImageIcon className="w-5 h-5 text-amber-400" />
+                    <span className="text-white text-sm font-medium">Add Image</span>
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                </label>
+
+                <label className="flex-1 cursor-pointer">
+                  <div className="backdrop-blur-xl bg-white/[0.05] border-2 border-dashed border-white/10 hover:border-amber-400/50 rounded-xl p-4 flex items-center justify-center gap-2 transition-all hover:bg-white/[0.08]">
+                    <Video className="w-5 h-5 text-amber-400" />
+                    <span className="text-white text-sm font-medium">Add Video</span>
+                  </div>
+                  <input
+                    type="file"
+                    accept="video/*"
+                    onChange={handleVideoUpload}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+
+              {/* Post Button */}
+              <Button
+                onClick={handleCreatePost}
+                disabled={!newPostContent.trim()}
+                className="w-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-black font-semibold py-6 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-amber-400/20"
+              >
+                Post to Community
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
