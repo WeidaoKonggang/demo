@@ -1,0 +1,431 @@
+import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, CheckCircle2, XCircle, Sparkles, Award, Play } from 'lucide-react';
+
+// 每个文物对应的问题
+const artifactQuestions = {
+  1: [ // Rosetta Stone
+    {
+      id: 1,
+      question: "When was the Rosetta Stone created?",
+      options: [
+        "A. 196 BCE",
+        "B. 323 BCE",
+        "C. 100 BCE",
+        "D. 31 BCE"
+      ],
+      correct: "A",
+      explanation: "The Rosetta Stone dates back to 196 BCE, as stated in the decree inscribed on it."
+    },
+    {
+      id: 2,
+      question: "Where was the Rosetta Stone discovered?",
+      options: [
+        "A. Cairo, Egypt",
+        "B. Rosetta, Egypt",
+        "C. Alexandria, Egypt",
+        "D. Luxor, Egypt"
+      ],
+      correct: "B",
+      explanation: "It was discovered in Rosetta, Egypt in 1799 by French soldiers during Napoleon's Egyptian campaign."
+    },
+    {
+      id: 3,
+      question: "How many different scripts are inscribed on the Rosetta Stone?",
+      options: [
+        "A. One",
+        "B. Two",
+        "C. Three",
+        "D. Four"
+      ],
+      correct: "C",
+      explanation: "The stone contains three scripts: Ancient Egyptian hieroglyphic, Demotic, and Ancient Greek."
+    }
+  ],
+  2: [ // Tutankhamun's Mask
+    {
+      id: 1,
+      question: "When was Tutankhamun's Death Mask created?",
+      options: [
+        "A. 1500 BCE",
+        "B. 1323 BCE",
+        "C. 1000 BCE",
+        "D. 500 BCE"
+      ],
+      correct: "B",
+      explanation: "The mask was created around 1323 BCE for the burial of the young pharaoh Tutankhamun."
+    },
+    {
+      id: 2,
+      question: "What is the mask primarily made of?",
+      options: [
+        "A. Bronze and copper",
+        "B. Silver and gems",
+        "C. Solid gold and semi-precious stones",
+        "D. Painted wood"
+      ],
+      correct: "C",
+      explanation: "The mask is made of solid gold weighing approximately 10.23 kg and inlaid with semi-precious stones and colored glass."
+    },
+    {
+      id: 3,
+      question: "Who discovered Tutankhamun's tomb?",
+      options: [
+        "A. Napoleon Bonaparte",
+        "B. Howard Carter",
+        "C. Jean-François Champollion",
+        "D. Giovanni Belzoni"
+      ],
+      correct: "B",
+      explanation: "Howard Carter discovered the nearly intact tomb in 1922 in the Valley of the Kings."
+    }
+  ],
+  3: [ // Venus de Milo
+    {
+      id: 1,
+      question: "When was the Venus de Milo created?",
+      options: [
+        "A. 300-250 BCE",
+        "B. 200-150 BCE",
+        "C. 130-100 BCE",
+        "D. 50-1 BCE"
+      ],
+      correct: "C",
+      explanation: "The Venus de Milo dates to approximately 130-100 BCE during the Hellenistic period."
+    },
+    {
+      id: 2,
+      question: "Where was the statue discovered?",
+      options: [
+        "A. Athens, Greece",
+        "B. Milos Island, Greece",
+        "C. Rome, Italy",
+        "D. Alexandria, Egypt"
+      ],
+      correct: "B",
+      explanation: "It was discovered in 1820 by a Greek peasant on the island of Milos."
+    },
+    {
+      id: 3,
+      question: "Which goddess does the Venus de Milo depict?",
+      options: [
+        "A. Athena",
+        "B. Hera",
+        "C. Artemis",
+        "D. Aphrodite"
+      ],
+      correct: "D",
+      explanation: "The statue depicts Aphrodite, the ancient Greek goddess of love and beauty."
+    }
+  ],
+  4: [ // Terracotta Army
+    {
+      id: 1,
+      question: "When was the Terracotta Army created?",
+      options: [
+        "A. 500-400 BCE",
+        "B. 300-200 BCE",
+        "C. 210-209 BCE",
+        "D. 100-50 BCE"
+      ],
+      correct: "C",
+      explanation: "The Terracotta Army was created around 210-209 BCE for Emperor Qin Shi Huang."
+    },
+    {
+      id: 2,
+      question: "How was the Terracotta Army discovered?",
+      options: [
+        "A. By archaeologists during a planned excavation",
+        "B. By local farmers digging a well",
+        "C. By tomb raiders",
+        "D. By government construction workers"
+      ],
+      correct: "B",
+      explanation: "It was discovered in 1974 by local farmers digging a well in Xi'an, China."
+    },
+    {
+      id: 3,
+      question: "Approximately how many terracotta soldiers have been uncovered?",
+      options: [
+        "A. 2,000",
+        "B. 5,000",
+        "C. 8,000",
+        "D. 12,000"
+      ],
+      correct: "C",
+      explanation: "Over 8,000 soldiers, 130 chariots, and 670 horses have been uncovered at the site."
+    }
+  ],
+  5: [ // Moai Statues
+    {
+      id: 1,
+      question: "When were the Moai statues created?",
+      options: [
+        "A. 500-800 CE",
+        "B. 1000-1200 CE",
+        "C. 1250-1500 CE",
+        "D. 1600-1800 CE"
+      ],
+      correct: "C",
+      explanation: "The Moai were carved between 1250 and 1500 CE by the Rapa Nui people."
+    },
+    {
+      id: 2,
+      question: "What are the Moai carved from?",
+      options: [
+        "A. Marble",
+        "B. Granite",
+        "C. Compressed volcanic ash",
+        "D. Limestone"
+      ],
+      correct: "C",
+      explanation: "The statues were carved from compressed volcanic ash found on Easter Island."
+    },
+    {
+      id: 3,
+      question: "What is the average height of a Moai statue?",
+      options: [
+        "A. 2 meters",
+        "B. 4 meters",
+        "C. 6 meters",
+        "D. 10 meters"
+      ],
+      correct: "B",
+      explanation: "The Moai average 4 meters tall and weigh approximately 14 tons."
+    }
+  ]
+};
+
+export default function Quest() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [answers, setAnswers] = useState({});
+  const [submitted, setSubmitted] = useState(false);
+  const [showAd, setShowAd] = useState(false);
+  const [adWatched, setAdWatched] = useState(false);
+
+  // 从URL获取artifactId
+  const params = new URLSearchParams(location.search);
+  const artifactId = parseInt(params.get('id')) || 1;
+  
+  // 根据artifactId获取对应的问题
+  const questions = artifactQuestions[artifactId] || artifactQuestions[1];
+
+  const handleAnswerSelect = (questionId, answer) => {
+    if (!submitted && !adWatched) {
+      setAnswers({ ...answers, [questionId]: answer });
+    }
+  };
+
+  const handleSubmit = () => {
+    setSubmitted(true);
+  };
+
+  const calculateScore = () => {
+    let correct = 0;
+    questions.forEach(q => {
+      if (answers[q.id] === q.correct) correct++;
+    });
+    return correct;
+  };
+
+  const score = submitted ? calculateScore() : 0;
+  const passed = score >= 2;
+
+  const handleWatchAd = () => {
+    setShowAd(true);
+  };
+
+  const handleAdComplete = () => {
+    setShowAd(false);
+    setAdWatched(true);
+    const correctAnswers = {};
+    questions.forEach(q => {
+      correctAnswers[q.id] = q.correct;
+    });
+    setAnswers(correctAnswers);
+    setSubmitted(true);
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0f0f0f] relative">
+      {/* Background matching Home */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center opacity-8"
+        style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1578301978018-3005759f48f7?w=1600')"
+        }}
+      />
+
+      {/* Gradient overlay matching Home */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0f0f0f]/80 via-[#0f0f0f]/50 to-[#0f0f0f]/90" />
+
+      <div className="relative z-10 min-h-screen pt-20">
+        {/* Header */}
+        <div className="px-6 mb-6 text-center">
+          <h1 className="text-white font-semibold text-xl">Quest Challenge</h1>
+        </div>
+
+        <div className="px-6 space-y-6">
+          {/* Introduction */}
+          <div className="backdrop-blur-2xl bg-amber-400/5 border border-amber-400/20 rounded-2xl p-6 shadow-xl">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-amber-400/10 flex items-center justify-center flex-shrink-0">
+                <Award className="w-5 h-5 text-amber-400" />
+              </div>
+              <div>
+                <p className="text-amber-400 font-medium mb-2">Quest Objective:</p>
+                <p className="text-white leading-relaxed">
+                  Answer the questions below to test your knowledge. Get at least 2 correct answers to unlock 
+                  the 2D artifact image for your house and earn experience points!
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Questions */}
+          {questions.map((q, index) => (
+            <div key={q.id} className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-2xl p-6 shadow-xl">
+              <h3 className="text-white font-semibold mb-4">
+                Question {index + 1}: {q.question}
+              </h3>
+
+              <div className="space-y-3">
+                {q.options.map((option) => {
+                  const letter = option.charAt(0);
+                  const isSelected = answers[q.id] === letter;
+                  const isCorrect = letter === q.correct;
+                  const showResult = submitted || adWatched;
+
+                  return (
+                    <button
+                      key={option}
+                      onClick={() => handleAnswerSelect(q.id, letter)}
+                      disabled={submitted || adWatched}
+                      className={`w-full text-left p-4 rounded-xl border transition-all ${
+                        showResult && isCorrect
+                          ? 'bg-green-500/20 border-green-400 text-white'
+                          : showResult && isSelected && !isCorrect
+                          ? 'bg-red-500/20 border-red-400 text-white'
+                          : isSelected
+                          ? 'bg-amber-400/20 border-amber-400 text-white'
+                          : 'bg-white/[0.02] border-white/5 text-gray-300 hover:bg-white/[0.04]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span>{option}</span>
+                        {showResult && isCorrect && <CheckCircle2 className="w-5 h-5 text-green-400" />}
+                        {showResult && isSelected && !isCorrect && <XCircle className="w-5 h-5 text-red-400" />}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Explanation */}
+              {(submitted || adWatched) && (
+                <div className="mt-4 p-4 bg-white/[0.02] rounded-xl border border-white/5">
+                  <p className="text-amber-400 font-medium mb-2">Explanation:</p>
+                  <p className="text-gray-300 text-sm leading-relaxed">{q.explanation}</p>
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Results */}
+          {submitted && !adWatched && (
+            <div className={`backdrop-blur-2xl border rounded-2xl p-6 shadow-xl ${
+              passed 
+                ? 'bg-green-500/10 border-green-400/30' 
+                : 'bg-red-500/10 border-red-400/30'
+            }`}>
+              <div className="text-center">
+                <div className="text-4xl font-bold text-white mb-2">
+                  {score} / {questions.length}
+                </div>
+                <p className={`font-semibold mb-2 ${passed ? 'text-green-400' : 'text-red-400'}`}>
+                  {passed ? '🎉 Quest Completed!' : '❌ Quest Failed'}
+                </p>
+                <p className="text-gray-300">
+                  {passed 
+                    ? 'You answered correctly! The artifact image is now unlocked.' 
+                    : 'You need at least 2 correct answers to unlock the artifact.'}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Ad section */}
+          {!submitted && !adWatched && Object.keys(answers).length === questions.length && (
+            <div className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-2xl p-6 shadow-xl">
+              <div className="text-center">
+                <p className="text-gray-300 mb-4">
+                  Want to get answers or skip tasks?
+                </p>
+                <Button
+                  onClick={handleWatchAd}
+                  variant="outline"
+                  className="border-amber-400/30 text-amber-400 hover:bg-amber-400/10"
+                >
+                  <Play className="w-4 h-4 mr-2" />
+                  Watch Ad to Reveal Answers
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Submit button */}
+          {!submitted && !adWatched && Object.keys(answers).length === questions.length && (
+            <Button
+              onClick={handleSubmit}
+              className="w-full bg-amber-400 hover:bg-amber-500 text-black font-semibold py-6 rounded-xl text-lg shadow-lg shadow-amber-400/20"
+            >
+              Submit Answers
+            </Button>
+          )}
+
+          {/* Continue button */}
+          {(submitted || adWatched) && (passed || adWatched) && (
+            <Button
+              onClick={() => navigate(createPageUrl('Guidance'))}
+              className="w-full bg-amber-400 hover:bg-amber-500 text-black font-semibold py-6 rounded-xl text-lg shadow-lg shadow-amber-400/20"
+            >
+              Continue to Guidance
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Ad Modal */}
+      {showAd && (
+        <div className="fixed inset-0 bg-[#0f0f0f]/95 z-50 flex items-center justify-center p-6 backdrop-blur-sm">
+          <div className="backdrop-blur-2xl bg-white/[0.02] border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-2xl">
+            <div className="aspect-video bg-gray-900 rounded-xl mb-4 flex items-center justify-center relative overflow-hidden">
+              <video
+                className="w-full h-full object-cover"
+                autoPlay
+                muted
+                loop
+                src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+              />
+              <div className="absolute top-4 right-4 bg-black/70 px-3 py-1 rounded-full text-white text-sm">
+                Ad: 5s
+              </div>
+            </div>
+            <p className="text-white text-center mb-4">
+              Simulated advertisement playing...
+            </p>
+            <Button
+              onClick={handleAdComplete}
+              className="w-full bg-amber-400 hover:bg-amber-500 text-black font-semibold shadow-lg shadow-amber-400/20"
+            >
+              Continue (All Answers Revealed)
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
