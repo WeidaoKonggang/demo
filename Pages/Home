@@ -1,0 +1,281 @@
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { Camera, Map, Home as HomeIcon, BookOpen, Users, User, Sparkles, Award, TrendingUp } from 'lucide-react';
+
+export default function Home() {
+  const navigate = useNavigate();
+
+  // Fetch current user
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me()
+  });
+
+  const quickActions = [
+    {
+      title: 'Scan Artifact',
+      icon: Camera,
+      description: 'Discover and learn',
+      gradient: 'from-amber-500/20 to-orange-500/20',
+      iconGradient: 'from-amber-400 to-orange-400',
+      action: () => navigate(createPageUrl('Scan'))
+    },
+    {
+      title: 'Start Tour',
+      icon: Map,
+      description: 'Virtual museum guide',
+      gradient: 'from-blue-500/20 to-cyan-500/20',
+      iconGradient: 'from-blue-400 to-cyan-400',
+      action: () => navigate(createPageUrl('Tour'))
+    },
+    {
+      title: 'My House',
+      icon: HomeIcon,
+      description: 'Decorate your space',
+      gradient: 'from-purple-500/20 to-pink-500/20',
+      iconGradient: 'from-purple-400 to-pink-400',
+      action: () => navigate(createPageUrl('House'))
+    },
+    {
+      title: 'Collection',
+      icon: BookOpen,
+      description: 'View your artifacts',
+      gradient: 'from-green-500/20 to-emerald-500/20',
+      iconGradient: 'from-green-400 to-emerald-400',
+      action: () => navigate(createPageUrl('Collection'))
+    },
+    {
+      title: 'Community',
+      icon: Users,
+      description: 'Share experiences',
+      gradient: 'from-rose-500/20 to-red-500/20',
+      iconGradient: 'from-rose-400 to-red-400',
+      action: () => navigate(createPageUrl('Community'))
+    },
+    {
+      title: 'Profile',
+      icon: User,
+      description: 'Your account',
+      gradient: 'from-indigo-500/20 to-violet-500/20',
+      iconGradient: 'from-indigo-400 to-violet-400',
+      action: () => navigate(createPageUrl('Profile'))
+    }
+  ];
+
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0f0f0f] relative overflow-hidden">
+      {/* Animated background particles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-2 h-2 rounded-full bg-amber-400/20 animate-pulse" />
+        <div className="absolute top-40 right-20 w-1 h-1 rounded-full bg-amber-400/30 animate-ping" style={{ animationDuration: '3s' }} />
+        <div className="absolute bottom-32 left-1/4 w-1.5 h-1.5 rounded-full bg-amber-400/20 animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 right-10 w-1 h-1 rounded-full bg-amber-400/30 animate-ping" style={{ animationDuration: '4s', animationDelay: '2s' }} />
+      </div>
+
+      {/* Background museum space with enhanced overlay */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center opacity-8"
+        style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1578301978018-3005759f48f7?w=1600')"
+        }}
+      />
+
+      {/* Enhanced gradient overlay with radial gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0f0f0f]/80 via-[#0f0f0f]/50 to-[#0f0f0f]/90" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(251,191,36,0.05),transparent_50%)]" />
+
+      <div className="relative z-10 px-6 py-8 pt-24">
+        {/* Header with enhanced glassmorphism and glow */}
+        <div className="backdrop-blur-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-amber-400/10 rounded-3xl p-6 mb-8 shadow-2xl shadow-amber-400/5 hover:shadow-amber-400/10 transition-all duration-500 group">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-amber-100 bg-clip-text text-transparent mb-2 group-hover:from-amber-200 group-hover:to-amber-400 transition-all duration-500">
+                TimeLens
+              </h1>
+              <p className="text-gray-400 text-sm flex items-center gap-2">
+                <Sparkles className="w-3 h-3 text-amber-400" />
+                {user ? `Welcome, ${user.full_name || 'Explorer'}` : 'Explore civilizations through time'}
+              </p>
+            </div>
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-amber-500 rounded-full blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-500" />
+              <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center text-black font-bold text-xl shadow-lg shadow-amber-400/30 group-hover:scale-110 transition-transform duration-300">
+                {getInitials(user?.full_name)}
+              </div>
+            </div>
+          </div>
+
+          {/* Enhanced XP Progress with glow effect */}
+          <div className="space-y-3">
+            <div className="flex justify-between items-center text-sm">
+              <div className="flex items-center gap-2">
+                <Award className="w-4 h-4 text-amber-400" />
+                <span className="text-gray-300 font-medium">Level 5</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-amber-400 font-bold">850 / 1000 XP</span>
+                <TrendingUp className="w-4 h-4 text-green-400" />
+              </div>
+            </div>
+            <div className="relative h-3 bg-black/30 rounded-full overflow-hidden border border-white/5">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" />
+              <div 
+                className="h-full bg-gradient-to-r from-amber-600 via-amber-400 to-amber-300 rounded-full shadow-lg shadow-amber-400/50 relative overflow-hidden" 
+                style={{ width: '85%' }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+              </div>
+            </div>
+            <p className="text-gray-500 text-xs text-center">150 XP until Level 6</p>
+          </div>
+        </div>
+
+        {/* Enhanced Companion greeting with animation */}
+        <div className="backdrop-blur-2xl bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-400/20 rounded-3xl p-6 mb-8 relative overflow-hidden shadow-2xl shadow-amber-400/5 hover:shadow-amber-400/10 transition-all duration-500 group">
+          <div className="absolute -right-8 -top-8 text-8xl opacity-10 group-hover:scale-110 group-hover:rotate-12 transition-all duration-700">🎭</div>
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-400/0 via-amber-400/5 to-amber-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="relative">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-full bg-amber-400/20 flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-amber-400" />
+              </div>
+              <p className="text-amber-400 font-semibold">Your AI Companion says:</p>
+            </div>
+            <p className="text-white text-lg leading-relaxed">
+              "Ready to explore the museum today? Let's discover some amazing artifacts together!"
+            </p>
+          </div>
+        </div>
+
+        {/* Quick Actions with enhanced hover effects */}
+        <div>
+          <h2 className="text-white text-xl font-semibold mb-5 flex items-center gap-2">
+            <div className="w-1 h-6 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full" />
+            Quick Actions
+          </h2>
+          <div className="grid grid-cols-2 gap-4">
+            {quickActions.map((action, index) => (
+              <button
+                key={index}
+                onClick={action.action}
+                className="relative backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-2xl p-6 text-left hover:bg-white/[0.06] transition-all duration-500 group shadow-xl hover:shadow-2xl overflow-hidden"
+                style={{
+                  animation: `fadeInUp 0.5s ease-out ${index * 0.1}s both`
+                }}
+              >
+                {/* Gradient overlay on hover */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                
+                {/* Glow effect */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                  <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} blur-xl`} />
+                </div>
+
+                {/* Border glow on hover */}
+                <div className="absolute inset-0 border-2 border-transparent group-hover:border-amber-400/30 rounded-2xl transition-all duration-500" />
+
+                <div className="relative">
+                  {/* Icon with enhanced animation */}
+                  <div className="relative mb-4">
+                    <div className={`absolute inset-0 bg-gradient-to-br ${action.iconGradient} rounded-xl blur-lg opacity-0 group-hover:opacity-60 transition-all duration-500`} />
+                    <div className="relative w-14 h-14 rounded-xl bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                      <action.icon className={`w-7 h-7 text-amber-400 group-hover:text-white transition-colors duration-300`} />
+                    </div>
+                  </div>
+
+                  {/* Text content */}
+                  <h3 className="text-white font-bold mb-1.5 text-lg group-hover:text-amber-100 transition-colors duration-300">
+                    {action.title}
+                  </h3>
+                  <p className="text-gray-400 text-sm group-hover:text-gray-300 transition-colors duration-300">
+                    {action.description}
+                  </p>
+
+                  {/* Arrow indicator on hover */}
+                  <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all duration-300">
+                    <div className="w-6 h-6 rounded-full bg-amber-400/20 flex items-center justify-center">
+                      <svg className="w-3 h-3 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Enhanced Stats with hover effects */}
+        <div className="mt-8 grid grid-cols-3 gap-4">
+          {[
+            { value: '24', label: 'Artifacts', icon: '📦', color: 'from-blue-400 to-cyan-400' },
+            { value: '8', label: 'Completed', icon: '✅', color: 'from-green-400 to-emerald-400' },
+            { value: '92%', label: 'Accuracy', icon: '🎯', color: 'from-amber-400 to-orange-400' }
+          ].map((stat, index) => (
+            <div 
+              key={index}
+              className="relative backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-2xl p-5 text-center shadow-xl hover:shadow-2xl transition-all duration-500 group overflow-hidden"
+              style={{
+                animation: `fadeInUp 0.5s ease-out ${0.6 + index * 0.1}s both`
+              }}
+            >
+              {/* Glow on hover */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500 blur-xl`} />
+              
+              <div className="relative">
+                <div className="text-3xl mb-2 group-hover:scale-110 transition-transform duration-300">
+                  {stat.icon}
+                </div>
+                <div className={`text-3xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent mb-2 group-hover:scale-110 transition-transform duration-300`}>
+                  {stat.value}
+                </div>
+                <div className="text-gray-400 text-xs font-medium group-hover:text-gray-300 transition-colors">
+                  {stat.label}
+                </div>
+              </div>
+
+              {/* Border highlight on hover */}
+              <div className={`absolute inset-0 border-2 border-transparent group-hover:border-gradient-to-r ${stat.color} opacity-0 group-hover:opacity-30 rounded-2xl transition-opacity duration-500`} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* CSS for animations */}
+      <style jsx>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+
+        .animate-shimmer {
+          animation: shimmer 3s infinite;
+        }
+      `}</style>
+    </div>
+  );
+}
