@@ -1,0 +1,427 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, MapPin, Navigation, Info, Lock } from 'lucide-react';
+
+export default function MapView() {
+  const navigate = useNavigate();
+  const [showGalleryDetail, setShowGalleryDetail] = useState(false);
+  const [selectedArtifact, setSelectedArtifact] = useState(null);
+
+  // Parse gallery ID from URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const galleryId = urlParams.get('gallery');
+
+  // Mock data for collected artifacts (in real app, this would come from user data)
+  const collectedArtifacts = ['vase-1', 'statue-1', 'painting-1', 'helmet-1'];
+
+  const galleries = {
+    '1': {
+      id: 1,
+      name: "Ancient Greece",
+      description: "Explore the wonders of ancient Greek civilization, from pottery and sculptures to philosophical artifacts.",
+      artifacts: 12,
+      position: { x: 65, y: 30 },
+      image: "https://greekgodsandgoddesses.net/wp-content/uploads/2023/11/ancient-greek-geography.jpeg",
+      availableArtifacts: [
+        { id: 'vase-1', name: 'Red-Figure Vase', emoji: '🏺', position: { x: 63, y: 28 }, collected: true },
+        { id: 'statue-1', name: 'Athena Statue', emoji: '🗿', position: { x: 67, y: 29 }, collected: true },
+        { id: 'coin-1', name: 'Ancient Coin', emoji: '🪙', position: { x: 65, y: 32 }, collected: false },
+        { id: 'helmet-1', name: 'Spartan Helmet', emoji: '⚔️', position: { x: 64, y: 31 }, collected: true }
+      ]
+    },
+    '2': {
+      id: 2,
+      name: "Egyptian Antiquities",
+      description: "Journey through ancient Egypt's treasures, including hieroglyphs, mummies, and royal artifacts.",
+      artifacts: 15,
+      position: { x: 35, y: 60 },
+      image: "https://egyptianstreets.com/wp-content/uploads/2022/09/ancient-egyptian-hieroglyphs-farrell-grehan.jpeg",
+      availableArtifacts: [
+        { id: 'scarab-2', name: 'Scarab Amulet', emoji: '🪲', position: { x: 33, y: 58 }, collected: false },
+        { id: 'papyrus-2', name: 'Ancient Papyrus', emoji: '📜', position: { x: 37, y: 59 }, collected: false },
+        { id: 'mask-2', name: 'Pharaoh Mask', emoji: '👑', position: { x: 35, y: 62 }, collected: false },
+        { id: 'statue-2', name: 'Anubis Statue', emoji: '🗿', position: { x: 36, y: 61 }, collected: false }
+      ]
+    },
+    '3': {
+      id: 3,
+      name: "Renaissance Art",
+      description: "Discover masterpieces from the Renaissance era, featuring paintings, sculptures, and historical documents.",
+      artifacts: 10,
+      position: { x: 70, y: 75 },
+      image: "https://i.etsystatic.com/45728069/r/il/42a0f9/5414344065/il_570xN.5414344065_mg8t.jpg",
+      availableArtifacts: [
+        { id: 'painting-1', name: 'Renaissance Portrait', emoji: '🖼️', position: { x: 68, y: 73 }, collected: true },
+        { id: 'sculpture-3', name: 'Marble Bust', emoji: '🗿', position: { x: 72, y: 74 }, collected: false },
+        { id: 'manuscript-3', name: 'Illuminated Manuscript', emoji: '📖', position: { x: 70, y: 77 }, collected: false },
+        { id: 'compass-3', name: 'Navigator Compass', emoji: '🧭', position: { x: 71, y: 76 }, collected: false }
+      ]
+    }
+  };
+
+  const selectedGallery = galleries[galleryId] || galleries['1'];
+  const userPosition = { x: 50, y: 85 };
+
+  // Update collected status based on mock data
+  selectedGallery.availableArtifacts.forEach(artifact => {
+    artifact.collected = collectedArtifacts.includes(artifact.id);
+  });
+
+  // Generate a curved path from user to gallery
+  const generatePath = () => {
+    const midX = (userPosition.x + selectedGallery.position.x) / 2;
+    const midY = (userPosition.y + selectedGallery.position.y) / 2 - 10;
+    return `M ${userPosition.x} ${userPosition.y} Q ${midX} ${midY} ${selectedGallery.position.x} ${selectedGallery.position.y}`;
+  };
+
+  const handleEnterGallery = () => {
+    setShowGalleryDetail(false);
+    navigate(createPageUrl('Scan'));
+  };
+
+  const handleArtifactClick = (artifact) => {
+    setSelectedArtifact(artifact);
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0f0f0f] relative">
+      {/* Background matching Home */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center opacity-8"
+        style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1578301978018-3005759f48f7?w=1600')"
+        }}
+      />
+
+      {/* Gradient overlay matching Home */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0f0f0f]/80 via-[#0f0f0f]/50 to-[#0f0f0f]/90" />
+
+      <div className="relative z-10 min-h-screen pt-20">
+        {/* Header */}
+        <div className="px-6 mb-6 text-center">
+          <h1 className="text-white font-semibold text-xl">Museum Map</h1>
+        </div>
+
+        <div className="px-6 space-y-6">
+          {/* Map Container */}
+          <div className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden shadow-xl">
+            {/* Map SVG */}
+            <div className="relative bg-gradient-to-br from-gray-900/50 to-gray-800/50 aspect-[4/3]">
+              {/* Grid pattern overlay */}
+              <div 
+                className="absolute inset-0 opacity-10"
+                style={{
+                  backgroundImage: `
+                    linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
+                  `,
+                  backgroundSize: '20px 20px'
+                }}
+              />
+
+              <svg className="w-full h-full" viewBox="0 0 100 100">
+                {/* Museum floor plan - simplified rooms */}
+                <rect x="10" y="10" width="80" height="80" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.1)" strokeWidth="0.3" rx="2" />
+                <rect x="15" y="15" width="25" height="25" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.15)" strokeWidth="0.2" rx="1" />
+                <rect x="45" y="15" width="25" height="25" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.15)" strokeWidth="0.2" rx="1" />
+                <rect x="25" y="50" width="35" height="25" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.15)" strokeWidth="0.2" rx="1" />
+                <rect x="65" y="55" width="20" height="30" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.15)" strokeWidth="0.2" rx="1" />
+
+                {/* Path from user to gallery */}
+                <path
+                  d={generatePath()}
+                  fill="none"
+                  stroke="rgba(251, 191, 36, 0.4)"
+                  strokeWidth="0.4"
+                  strokeDasharray="2,2"
+                  className="animate-pulse"
+                />
+
+                {/* User position marker */}
+                <g transform={`translate(${userPosition.x}, ${userPosition.y})`}>
+                  <circle r="2.5" fill="rgba(59, 130, 246, 0.3)" />
+                  <circle r="1.5" fill="#3b82f6" />
+                  <circle r="3.5" fill="none" stroke="rgba(59, 130, 246, 0.5)" strokeWidth="0.3">
+                    <animate attributeName="r" from="1.5" to="4" dur="2s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" from="1" to="0" dur="2s" repeatCount="indefinite" />
+                  </circle>
+                </g>
+
+                {/* Artifacts around gallery */}
+                {selectedGallery.availableArtifacts.map((artifact, index) => (
+                  <g 
+                    key={artifact.id}
+                    transform={`translate(${artifact.position.x}, ${artifact.position.y})`}
+                    onClick={() => handleArtifactClick(artifact)}
+                    className="cursor-pointer"
+                  >
+                    {artifact.collected ? (
+                      // Collected artifact - colorful with glow
+                      <>
+                        <circle r="2" fill="rgba(251, 191, 36, 0.3)" />
+                        <circle r="1.2" fill="#fbbf24" />
+                        <text
+                          x="0"
+                          y="0.5"
+                          textAnchor="middle"
+                          fontSize="3"
+                          className="select-none"
+                        >
+                          {artifact.emoji}
+                        </text>
+                      </>
+                    ) : (
+                      // Uncollected artifact - grayscale with lock
+                      <>
+                        <circle r="2" fill="rgba(100, 100, 100, 0.3)" />
+                        <circle r="1.2" fill="#6b7280" />
+                        <text
+                          x="0"
+                          y="0.5"
+                          textAnchor="middle"
+                          fontSize="3"
+                          opacity="0.4"
+                          className="select-none grayscale"
+                        >
+                          {artifact.emoji}
+                        </text>
+                        <circle r="0.6" fill="rgba(0,0,0,0.6)" cx="0.8" cy="-0.8" />
+                        <text
+                          x="0.8"
+                          y="-0.3"
+                          textAnchor="middle"
+                          fontSize="1.2"
+                          fill="white"
+                          className="select-none"
+                        >
+                          🔒
+                        </text>
+                      </>
+                    )}
+                  </g>
+                ))}
+
+                {/* Gallery marker */}
+                <g 
+                  transform={`translate(${selectedGallery.position.x}, ${selectedGallery.position.y})`}
+                  onClick={() => setShowGalleryDetail(true)}
+                  className="cursor-pointer"
+                >
+                  <circle r="3" fill="rgba(251, 191, 36, 0.2)" />
+                  <circle r="2" fill="#fbbf24" />
+                  <circle r="4" fill="none" stroke="rgba(251, 191, 36, 0.6)" strokeWidth="0.3">
+                    <animate attributeName="r" from="2" to="5" dur="2s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" from="1" to="0" dur="2s" repeatCount="indefinite" />
+                  </circle>
+                </g>
+              </svg>
+
+              {/* Legend */}
+              <div className="absolute bottom-3 left-3 backdrop-blur-xl bg-white/[0.05] border border-white/10 rounded-lg p-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-blue-500" />
+                  <span className="text-white text-xs">You are here</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-amber-400" />
+                  <span className="text-white text-xs">{selectedGallery.name}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="text-xs">🏺</div>
+                  <span className="text-white text-xs">Collected</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="text-xs opacity-40 grayscale">🏺</div>
+                  <span className="text-white text-xs">Locked</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Artifacts List */}
+          <div className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-2xl p-6 shadow-xl">
+            <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+              <span>Available Artifacts</span>
+              <span className="text-amber-400 text-sm">
+                ({selectedGallery.availableArtifacts.filter(a => a.collected).length}/{selectedGallery.availableArtifacts.length})
+              </span>
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              {selectedGallery.availableArtifacts.map((artifact) => (
+                <button
+                  key={artifact.id}
+                  onClick={() => handleArtifactClick(artifact)}
+                  className={`backdrop-blur-xl border rounded-xl p-4 text-center transition-all ${
+                    artifact.collected
+                      ? 'bg-white/[0.03] border-amber-400/30 hover:bg-white/[0.05]'
+                      : 'bg-white/[0.02] border-white/5 hover:bg-white/[0.03] opacity-60'
+                  }`}
+                >
+                  <div className={`text-3xl mb-2 ${!artifact.collected && 'grayscale opacity-50'}`}>
+                    {artifact.emoji}
+                  </div>
+                  <div className="text-white text-sm font-medium">{artifact.name}</div>
+                  {!artifact.collected && (
+                    <div className="flex items-center justify-center gap-1 mt-1">
+                      <Lock className="w-3 h-3 text-gray-500" />
+                      <span className="text-gray-500 text-xs">Locked</span>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Gallery Info Card */}
+          <div className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-2xl p-6 shadow-xl">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="w-12 h-12 rounded-xl bg-amber-400/10 flex items-center justify-center flex-shrink-0">
+                <MapPin className="w-6 h-6 text-amber-400" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-white font-bold text-xl mb-1">{selectedGallery.name}</h2>
+                <p className="text-gray-400 text-sm">Ground Floor • West Wing</p>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 text-gray-300">
+                <Navigation className="w-4 h-4 text-amber-400" />
+                <span className="text-sm">Approximately 2 minutes walk</span>
+              </div>
+              
+              <div className="flex items-center gap-3 text-gray-300">
+                <Info className="w-4 h-4 text-amber-400" />
+                <span className="text-sm">{selectedGallery.artifacts} artifacts to explore</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div className="space-y-3">
+            <Button
+              onClick={() => setShowGalleryDetail(true)}
+              className="w-full bg-amber-400 hover:bg-amber-500 text-black font-semibold py-6 rounded-xl text-lg shadow-lg shadow-amber-400/20 hover:translate-y-[-4px] transition-all duration-200"
+            >
+              View Gallery Details
+            </Button>
+            
+            <Button
+              onClick={() => navigate(createPageUrl('Tour'))}
+              variant="outline"
+              className="w-full border-white/10 text-white hover:bg-white/[0.04] py-6 rounded-xl"
+            >
+              Back to Tour Selection
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Gallery Detail Modal */}
+      {showGalleryDetail && (
+        <div 
+          className="fixed inset-0 bg-[#0f0f0f]/90 z-50 flex items-center justify-center p-6 backdrop-blur-sm"
+          onClick={() => setShowGalleryDetail(false)}
+        >
+          <div 
+            className="backdrop-blur-2xl bg-white/[0.05] border border-white/10 rounded-3xl overflow-hidden max-w-md w-full shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={selectedGallery.image}
+              alt={selectedGallery.name}
+              className="w-full h-48 object-cover"
+            />
+            <div className="p-6 space-y-4">
+              <div>
+                <h3 className="text-white font-bold text-2xl mb-2">{selectedGallery.name}</h3>
+                <p className="text-gray-300 leading-relaxed">{selectedGallery.description}</p>
+              </div>
+
+              <div className="backdrop-blur-xl bg-white/[0.05] border border-white/10 rounded-xl p-4">
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  <div>
+                    <div className="text-2xl font-bold text-amber-400">{selectedGallery.artifacts}</div>
+                    <div className="text-gray-400 text-xs mt-1">Artifacts</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-amber-400">2 min</div>
+                    <div className="text-gray-400 text-xs mt-1">Walk Time</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Button
+                  onClick={handleEnterGallery}
+                  className="w-full bg-amber-400 hover:bg-amber-500 text-black font-semibold py-4 rounded-xl shadow-lg shadow-amber-400/20"
+                >
+                  Enter Gallery
+                </Button>
+                <Button
+                  onClick={() => setShowGalleryDetail(false)}
+                  variant="outline"
+                  className="w-full border-white/10 text-white hover:bg-white/[0.04] py-4 rounded-xl"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Artifact Detail Modal */}
+      {selectedArtifact && (
+        <div 
+          className="fixed inset-0 bg-[#0f0f0f]/90 z-50 flex items-center justify-center p-6 backdrop-blur-sm"
+          onClick={() => setSelectedArtifact(null)}
+        >
+          <div 
+            className="backdrop-blur-2xl bg-white/[0.05] border border-white/10 rounded-3xl overflow-hidden max-w-sm w-full shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 space-y-4">
+              <div className={`text-6xl text-center ${!selectedArtifact.collected && 'grayscale opacity-50'}`}>
+                {selectedArtifact.emoji}
+              </div>
+              
+              <div className="text-center">
+                <h3 className="text-white font-bold text-xl mb-2">{selectedArtifact.name}</h3>
+                {selectedArtifact.collected ? (
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-500/20 border border-green-400/30 rounded-full">
+                    <div className="w-2 h-2 rounded-full bg-green-400" />
+                    <span className="text-green-400 text-sm font-medium">Collected</span>
+                  </div>
+                ) : (
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-500/20 border border-gray-400/30 rounded-full">
+                    <Lock className="w-3 h-3 text-gray-400" />
+                    <span className="text-gray-400 text-sm font-medium">Not Yet Collected</span>
+                  </div>
+                )}
+              </div>
+
+              {!selectedArtifact.collected && (
+                <div className="backdrop-blur-xl bg-amber-400/10 border border-amber-400/30 rounded-xl p-4">
+                  <p className="text-amber-400 text-sm text-center">
+                    Visit this gallery and complete the quest to unlock this artifact!
+                  </p>
+                </div>
+              )}
+
+              <Button
+                onClick={() => setSelectedArtifact(null)}
+                variant="outline"
+                className="w-full border-white/10 text-white hover:bg-white/[0.04] py-4 rounded-xl"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
