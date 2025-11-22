@@ -1,0 +1,227 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, X } from 'lucide-react';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+
+export default function House() {
+  const navigate = useNavigate();
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  const [placedItems, setPlacedItems] = useState([
+    { id: 1, name: "Ancient Vase", emoji: "🏺", position: { top: '40%', left: '20%' } },
+    { id: 2, name: "Egyptian Statue", emoji: "🗿", position: { top: '60%', left: '70%' } },
+    { id: 3, name: "Painting", emoji: "🖼️", position: { top: '20%', left: '60%' } }
+  ]);
+
+  const [inventory, setInventory] = useState([
+    { id: 4, name: "Roman Coin", emoji: "🪙" },
+    { id: 5, name: "Viking Sword", emoji: "⚔️" },
+    { id: 6, name: "Ancient Scroll", emoji: "📜" },
+    { id: 7, name: "Golden Crown", emoji: "👑" }
+  ]);
+
+  const handleDragEnd = (result) => {
+    const { source, destination, draggableId } = result;
+
+    if (!destination) return;
+
+    const itemId = parseInt(draggableId);
+
+    // 从inventory拖到house
+    if (source.droppableId === 'inventory' && destination.droppableId === 'house') {
+      const item = inventory.find(i => i.id === itemId);
+      if (item) {
+        setInventory(inventory.filter(i => i.id !== item.id));
+        
+        const randomTop = Math.random() * 60 + 20;
+        const randomLeft = Math.random() * 60 + 20;
+        
+        setPlacedItems([...placedItems, {
+          ...item,
+          position: { top: `${randomTop}%`, left: `${randomLeft}%` }
+        }]);
+      }
+    }
+    
+    // 从house拖回inventory
+    if (source.droppableId === 'house' && destination.droppableId === 'inventory') {
+      const item = placedItems.find(i => i.id === itemId);
+      if (item) {
+        setPlacedItems(placedItems.filter(i => i.id !== item.id));
+        
+        const { position, ...itemWithoutPosition } = item;
+        setInventory([...inventory, itemWithoutPosition]);
+      }
+    }
+  };
+
+  return (
+    <DragDropContext onDragEnd={handleDragEnd}>
+      <div className="min-h-screen bg-[#0f0f0f] relative">
+        {/* Background matching Home */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-8"
+          style={{
+            backgroundImage: "url('https://images.unsplash.com/photo-1578301978018-3005759f48f7?w=1600')"
+          }}
+        />
+
+        {/* Gradient overlay matching Home */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0f0f0f]/80 via-[#0f0f0f]/50 to-[#0f0f0f]/90" />
+
+        <div className="relative z-10 min-h-screen pb-24">
+          {/* Header */}
+          <div className="p-6 flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate(createPageUrl('Home'))}
+              className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 text-white hover:bg-white/[0.04]"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <h1 className="text-white font-semibold">My House</h1>
+            <div className="w-10" />
+          </div>
+
+          <div className="px-6 space-y-6">
+            {/* Stats */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-xl p-4 text-center shadow-xl">
+                <div className="text-2xl font-bold text-amber-400">{placedItems.length}</div>
+                <div className="text-gray-400 text-xs mt-1">Placed</div>
+              </div>
+              <div className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-xl p-4 text-center shadow-xl">
+                <div className="text-2xl font-bold text-amber-400">{inventory.length}</div>
+                <div className="text-gray-400 text-xs mt-1">In Inventory</div>
+              </div>
+            </div>
+
+            {/* House display */}
+            <Droppable droppableId="house">
+              {(provided, snapshot) => (
+                <div 
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  className={`backdrop-blur-2xl bg-white/[0.02] border rounded-2xl overflow-hidden shadow-xl transition-all ${
+                    snapshot.isDraggingOver ? 'border-amber-400/50 bg-amber-400/5' : 'border-white/5'
+                  }`}
+                >
+                  <div className="relative h-80 bg-gradient-to-b from-amber-400/5 to-transparent">
+                    <img
+                      src="https://kaizenaire.com/wp-content/uploads/2023/12/Residential-Interior-Design-Singapore-Transforming-Your-Home-with-Style-and-Functionality.jpg"
+                      alt="House Interior"
+                      className="w-full h-full object-cover opacity-20"
+                    />
+                    
+                    {/* Placed items */}
+                    {placedItems.map((item, index) => (
+                      <Draggable key={item.id} draggableId={item.id.toString()} index={index}>
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            onClick={() => !snapshot.isDragging && setSelectedItem(item)}
+                            className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-transform cursor-move ${
+                              snapshot.isDragging ? 'scale-125 opacity-70' : 'hover:scale-110'
+                            }`}
+                            style={{
+                              ...item.position,
+                              ...provided.draggableProps.style
+                            }}
+                          >
+                            <div className="text-4xl drop-shadow-lg">{item.emoji}</div>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    
+                    {snapshot.isDraggingOver && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <p className="text-amber-400 text-lg font-semibold bg-black/50 px-4 py-2 rounded-lg">
+                          Release to place here
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  {provided.placeholder}
+                  
+                  <div className="p-4 border-t border-white/5">
+                    <p className="text-white text-center text-sm">
+                      Tap items to view details • Drag from inventory to place • Drag back to remove
+                    </p>
+                  </div>
+                </div>
+              )}
+            </Droppable>
+
+            {/* Inventory */}
+            <Droppable droppableId="inventory" direction="horizontal">
+              {(provided) => (
+                <div 
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-2xl p-6 shadow-xl"
+                >
+                  <h3 className="text-white font-semibold mb-4">Inventory ({inventory.length})</h3>
+                  <div className="grid grid-cols-4 gap-3">
+                    {inventory.map((item, index) => (
+                      <Draggable key={item.id} draggableId={item.id.toString()} index={index}>
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            onClick={() => !snapshot.isDragging && setSelectedItem(item)}
+                            className={`backdrop-blur-2xl border rounded-xl p-4 transition-all cursor-move ${
+                              snapshot.isDragging 
+                                ? 'bg-amber-400/20 border-amber-400 shadow-2xl scale-110 rotate-6' 
+                                : 'bg-white/[0.02] border-white/5 hover:bg-white/[0.04] hover:border-amber-400/30'
+                            }`}
+                          >
+                            <div className="text-3xl mb-2">{item.emoji}</div>
+                            <div className="text-white text-xs">{item.name}</div>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                </div>
+              )}
+            </Droppable>
+          </div>
+        </div>
+
+        {/* Item detail modal */}
+        {selectedItem && (
+          <div className="fixed inset-0 bg-[#0f0f0f]/90 z-50 flex items-center justify-center p-6 backdrop-blur-sm" onClick={() => setSelectedItem(null)}>
+            <div className="backdrop-blur-2xl bg-white/[0.02] border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-white font-bold text-xl">{selectedItem.name}</h3>
+                <button onClick={() => setSelectedItem(null)}>
+                  <X className="w-5 h-5 text-gray-400 hover:text-white" />
+                </button>
+              </div>
+              <div className="text-center mb-6">
+                <div className="text-6xl mb-4">{selectedItem.emoji}</div>
+                <p className="text-gray-300">
+                  This artifact was unlocked by completing a quest. Place it in your house to remember your journey!
+                </p>
+              </div>
+              <Button
+                onClick={() => setSelectedItem(null)}
+                className="w-full bg-amber-400 hover:bg-amber-500 text-black font-semibold shadow-lg shadow-amber-400/20"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    </DragDropContext>
+  );
+}
