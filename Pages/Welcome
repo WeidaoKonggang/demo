@@ -1,0 +1,121 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { Button } from '@/components/ui/button';
+import { ChevronRight, Sparkles } from 'lucide-react';
+
+export default function Welcome() {
+  const navigate = useNavigate();
+  const [step, setStep] = useState(0);
+
+  const steps = [
+    {
+      title: "Welcome to TimeLens",
+      description: "Your AI companion for exploring museum artifacts and unlocking civilizations",
+      icon: "✨"
+    },
+    {
+      title: "Scan & Discover",
+      description: "Scan artifacts to learn their stories and complete quests",
+      icon: "📸"
+    },
+    {
+      title: "Collect & Decorate",
+      description: "Unlock 2D artifacts and decorate your companion's house",
+      icon: "🏛️"
+    },
+    {
+      title: "Share & Connect",
+      description: "Join the community and share your museum experiences",
+      icon: "🌐"
+    }
+  ];
+
+  const handleNext = () => {
+    if (step < steps.length - 1) {
+      setStep(step + 1);
+    } else {
+      navigate(createPageUrl('MuseumSelect'));
+    }
+  };
+
+  const handleSkip = () => {
+    navigate(createPageUrl('MuseumSelect'));
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0f0f0f] relative overflow-hidden">
+      {/* Background with museum imagery */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center opacity-8"
+        style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1578301978018-3005759f48f7?w=1600')"
+        }}
+      />
+      
+      {/* Gradient overlay matching Home */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0f0f0f]/80 via-[#0f0f0f]/50 to-[#0f0f0f]/90" />
+
+      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6">
+        {/* Step indicator */}
+        <div className="flex gap-2 mb-12">
+          {steps.map((_, index) => (
+            <div
+              key={index}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                index === step ? 'w-12 bg-amber-400' : 'w-6 bg-white/20'
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* Content card with glassmorphism matching Home */}
+        <div className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-3xl p-8 max-w-md w-full text-center shadow-xl">
+          <div className="text-6xl mb-6 animate-bounce">
+            {steps[step].icon}
+          </div>
+          
+          <h1 className="text-3xl font-bold text-white mb-4">
+            {steps[step].title}
+          </h1>
+          
+          <p className="text-gray-400 text-lg leading-relaxed mb-8">
+            {steps[step].description}
+          </p>
+
+          {step === 0 && (
+            <div className="flex items-center justify-center gap-2 text-amber-400 mb-6">
+              <Sparkles className="w-5 h-5" />
+              <span className="text-sm font-medium">Powered by AI Companion</span>
+            </div>
+          )}
+        </div>
+
+        {/* Navigation buttons */}
+        <div className="mt-12 flex gap-4 w-full max-w-md">
+          <Button
+            variant="ghost"
+            onClick={handleSkip}
+            className="flex-1 text-white/70 hover:text-white hover:bg-white/[0.04] border border-white/5"
+          >
+            Skip
+          </Button>
+          
+          <Button
+            onClick={handleNext}
+            className="flex-1 bg-amber-400 hover:bg-amber-500 text-black font-semibold shadow-lg shadow-amber-400/20"
+          >
+            {step < steps.length - 1 ? (
+              <>
+                Next
+                <ChevronRight className="w-5 h-5 ml-2" />
+              </>
+            ) : (
+              'Start Adventure'
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
