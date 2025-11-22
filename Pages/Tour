@@ -1,0 +1,165 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Map, Camera, Sparkles, CheckCircle2 } from 'lucide-react';
+
+export default function Tour() {
+  const navigate = useNavigate();
+  const [selectedGallery, setSelectedGallery] = useState(null);
+
+  const galleries = [
+    {
+      id: 1,
+      name: "Ancient Greece",
+      artifacts: 12,
+      completed: 8,
+      image: "https://greekgodsandgoddesses.net/wp-content/uploads/2023/11/ancient-greek-geography.jpeg"
+    },
+    {
+      id: 2,
+      name: "Egyptian Antiquities",
+      artifacts: 15,
+      completed: 5,
+      image: "https://egyptianstreets.com/wp-content/uploads/2022/09/ancient-egyptian-hieroglyphs-farrell-grehan.jpeg"
+    },
+    {
+      id: 3,
+      name: "Renaissance Art",
+      artifacts: 10,
+      completed: 3,
+      image: "https://i.etsystatic.com/45728069/r/il/42a0f9/5414344065/il_570xN.5414344065_mg8t.jpg"
+    }
+  ];
+
+  const handleViewMap = () => {
+    if (selectedGallery) {
+      navigate(createPageUrl('MapView') + `?gallery=${selectedGallery.id}`);
+    }
+  };
+
+  const handleScan = () => {
+    navigate(createPageUrl('Scan'));
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0f0f0f] relative">
+      {/* Background matching Home */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center opacity-8"
+        style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1578301978018-3005759f48f7?w=1600')"
+        }}
+      />
+
+      {/* Gradient overlay matching Home */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0f0f0f]/80 via-[#0f0f0f]/50 to-[#0f0f0f]/90" />
+
+      <div className="relative z-10 min-h-screen pt-20">
+        {/* Header */}
+        <div className="px-6 mb-6 text-center">
+          <h1 className="text-white font-semibold text-xl">Virtual Tour</h1>
+        </div>
+
+        <div className="px-6 space-y-6">
+          {/* AI Guide */}
+          <div className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-2xl p-6 shadow-xl">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-amber-400/10 flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-5 h-5 text-amber-400" />
+              </div>
+              <div>
+                <p className="text-amber-400 font-medium mb-2">AI Companion Guide:</p>
+                <p className="text-white leading-relaxed">
+                  Choose a gallery to explore! I'll guide you through the museum and show you the best route.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Selected Gallery Info */}
+          {selectedGallery && (
+            <div className="backdrop-blur-2xl bg-amber-400/10 border border-amber-400/30 rounded-2xl p-4 shadow-xl">
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="w-6 h-6 text-amber-400 flex-shrink-0" />
+                <div>
+                  <p className="text-white font-semibold">{selectedGallery.name}</p>
+                  <p className="text-gray-300 text-sm">
+                    {selectedGallery.artifacts} artifacts • {selectedGallery.completed} completed
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Available Galleries */}
+          <div>
+            <h2 className="text-white text-lg font-semibold mb-4">Available Galleries</h2>
+            <div className="space-y-4">
+              {galleries.map((gallery) => (
+                <button
+                  key={gallery.id}
+                  onClick={() => setSelectedGallery(gallery)}
+                  className={`w-full backdrop-blur-2xl border rounded-2xl overflow-hidden transition-all shadow-xl ${
+                    selectedGallery?.id === gallery.id
+                      ? 'bg-white/[0.04] border-amber-400/50 scale-[1.02]'
+                      : 'bg-white/[0.02] border-white/5 hover:bg-white/[0.04]'
+                  }`}
+                >
+                  <div className="flex">
+                    <img
+                      src={gallery.image}
+                      alt={gallery.name}
+                      className="w-24 h-24 object-cover"
+                    />
+                    <div className="flex-1 p-4 text-left">
+                      <h3 className="text-white font-semibold mb-1">{gallery.name}</h3>
+                      <p className="text-gray-400 text-sm mb-2">
+                        {gallery.artifacts} artifacts available
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-amber-400 rounded-full"
+                            style={{ width: `${(gallery.completed / gallery.artifacts) * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-amber-400 text-xs font-medium">
+                          {gallery.completed}/{gallery.artifacts}
+                        </span>
+                      </div>
+                    </div>
+                    {selectedGallery?.id === gallery.id && (
+                      <div className="flex items-center pr-4">
+                        <CheckCircle2 className="w-6 h-6 text-amber-400" />
+                      </div>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="grid grid-cols-2 gap-4">
+            <Button
+              onClick={handleViewMap}
+              disabled={!selectedGallery}
+              className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-amber-400/30 text-white py-6 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-xl hover:translate-y-[-3px] transition-all duration-200"
+            >
+              <Map className="w-5 h-5 mr-2" />
+              View Map
+            </Button>
+            <Button
+              onClick={handleScan}
+              className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-amber-400/30 text-white py-6 rounded-xl shadow-xl hover:translate-y-[-3px] transition-all duration-200"
+            >
+              <Camera className="w-5 h-5 mr-2" />
+              Scan Now
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
