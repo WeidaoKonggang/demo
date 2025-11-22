@@ -1,0 +1,312 @@
+
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { Button } from '@/components/ui/button';
+import { MapPin, Search, Map as MapIcon, List, Check, Navigation } from 'lucide-react';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix marker icon issue with Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+function MapCenterController({ center }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, map.getZoom());
+  }, [center, map]);
+  return null;
+}
+
+export default function MuseumSelect() {
+  const navigate = useNavigate();
+  const [selected, setSelected] = useState(null);
+  const [viewMode, setViewMode] = useState('list');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [mapCenter, setMapCenter] = useState([40.7794, -73.9632]);
+
+  const museums = [
+    {
+      id: 1,
+      name: "The Metropolitan Museum",
+      location: "New York, USA",
+      artifacts: 150,
+      position: [40.7794, -73.9632],
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQLmUZ7MMr2kWY2yDNojVVCj10s52xKfMno6g&s"
+    },
+    {
+      id: 2,
+      name: "British Museum",
+      location: "London, UK",
+      artifacts: 200,
+      position: [51.5194, -0.1270],
+      image: "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=400&q=80"
+    },
+    {
+      id: 3,
+      name: "Louvre Museum",
+      location: "Paris, France",
+      artifacts: 180,
+      position: [48.8606, 2.3376],
+      image: "https://media.architecturaldigest.com/photos/5900cc370638dd3b70018b33/1:1/w_2066,h_2066,c_limit/Secrets%20of%20Louvre%201.jpg"
+    },
+    {
+      id: 4,
+      name: "Rijksmuseum",
+      location: "Amsterdam, Netherlands",
+      artifacts: 165,
+      position: [52.3600, 4.8852],
+      image: "https://images.unsplash.com/photo-1555992336-fb0d29498b13?w=400&q=80"
+    },
+    {
+      id: 5,
+      name: "Vatican Museums",
+      location: "Vatican City",
+      artifacts: 210,
+      position: [41.9065, 12.4536],
+      image: "https://images.unsplash.com/photo-1604999333679-b86d54738315?w=400&q=80"
+    },
+    {
+      id: 6,
+      name: "Smithsonian Institution",
+      location: "Washington D.C., USA",
+      artifacts: 190,
+      position: [38.8913, -77.0261],
+      image: "https://images.unsplash.com/photo-1572252009286-268acec5ca0a?w=400&q=80"
+    },
+    {
+      id: 7,
+      name: "Uffizi Gallery",
+      location: "Florence, Italy",
+      artifacts: 140,
+      position: [43.7686, 11.2558],
+      image: "https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?w=800"
+    }
+  ];
+
+  const filteredMuseums = museums.filter(museum => 
+    museum.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    museum.location.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleUseLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setMapCenter([latitude, longitude]);
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          alert('Unable to get your location. Please enable location services.');
+        }
+      );
+    } else {
+      alert('Geolocation is not supported by your browser.');
+    }
+  };
+
+  const handleConfirm = () => {
+    if (selected) {
+      navigate(createPageUrl('Home'));
+    }
+  };
+
+  const handleSelectMuseum = (museum) => {
+    setSelected(museum.id);
+    if (viewMode === 'map') {
+      setMapCenter(museum.position);
+    }
+  };
+
+  const selectedMuseum = museums.find(m => m.id === selected);
+
+  return (
+    <div className="min-h-screen bg-[#0f0f0f] relative">
+      {/* Background matching Home */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center opacity-8"
+        style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1578301978018-3005759f48f7?w=1600')"
+        }}
+      />
+
+      {/* Gradient overlay matching Home */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0f0f0f]/80 via-[#0f0f0f]/50 to-[#0f0f0f]/90" />
+
+      <div className="relative z-10 min-h-screen flex flex-col px-6 py-8 pb-24">
+        {/* Header */}
+        <div className="text-center mb-6">
+          <h1 className="text-3xl font-bold text-white mb-2">Select Your Museum</h1>
+          <p className="text-gray-400">Choose a museum to begin your journey</p>
+        </div>
+
+        {/* Search bar */}
+        <div className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-2xl p-4 mb-4 shadow-xl">
+          <div className="flex items-center gap-3">
+            <Search className="w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search museums by name or city..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 bg-transparent text-white placeholder-gray-400 outline-none"
+            />
+          </div>
+        </div>
+
+        {/* View toggle */}
+        <div className="flex gap-2 mb-6">
+          <button
+            onClick={() => setViewMode('map')}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all ${
+              viewMode === 'map'
+                ? 'bg-amber-400 text-black font-semibold shadow-lg shadow-amber-400/20'
+                : 'backdrop-blur-2xl bg-white/[0.02] border border-white/5 text-gray-300 hover:bg-white/[0.04]'
+            }`}
+          >
+            <MapIcon className="w-4 h-4" />
+            Map View
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all ${
+              viewMode === 'list'
+                ? 'bg-amber-400 text-black font-semibold shadow-lg shadow-amber-400/20'
+                : 'backdrop-blur-2xl bg-white/[0.02] border border-white/5 text-gray-300 hover:bg-white/[0.04]'
+            }`}
+          >
+            <List className="w-4 h-4" />
+            List View
+          </button>
+        </div>
+
+        {/* Content area */}
+        <div className="flex-1 mb-6">
+          {viewMode === 'map' ? (
+            <div className="backdrop-blur-2xl bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden shadow-xl">
+              <div className="h-[400px] rounded-t-2xl overflow-hidden">
+                <MapContainer 
+                  center={mapCenter} 
+                  zoom={13} 
+                  style={{ height: '100%', width: '100%' }}
+                  zoomControl={true}
+                >
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+                  <MapCenterController center={mapCenter} />
+                  {filteredMuseums.map((museum) => (
+                    <Marker 
+                      key={museum.id} 
+                      position={museum.position}
+                      eventHandlers={{
+                        click: () => handleSelectMuseum(museum),
+                      }}
+                    >
+                      <Popup>
+                        <div className="text-center">
+                          <h3 className="font-semibold">{museum.name}</h3>
+                          <p className="text-sm text-gray-600">{museum.location}</p>
+                          <p className="text-sm text-amber-600">{museum.artifacts} artifacts</p>
+                        </div>
+                      </Popup>
+                    </Marker>
+                  ))}
+                </MapContainer>
+              </div>
+
+              {/* Location button */}
+              <div className="p-4 border-t border-white/5">
+                <Button
+                  onClick={handleUseLocation}
+                  variant="outline"
+                  className="w-full border-white/5 text-gray-300 hover:bg-white/[0.04] hover:text-white"
+                >
+                  <Navigation className="w-4 h-4 mr-2" />
+                  Use My Location
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 overflow-y-auto max-h-[500px] pr-2">
+              {filteredMuseums.map((museum) => (
+                <button
+                  key={museum.id}
+                  onClick={() => setSelected(museum.id)}
+                  className={`w-full backdrop-blur-2xl border rounded-2xl overflow-hidden transition-all shadow-xl ${
+                    selected === museum.id
+                      ? 'bg-white/[0.04] border-amber-400/50 scale-[1.02]'
+                      : 'bg-white/[0.02] border-white/5 hover:bg-white/[0.04]'
+                  }`}
+                >
+                  <div className="flex">
+                    <img
+                      src={museum.image}
+                      alt={museum.name}
+                      className="w-32 h-32 object-cover"
+                    />
+                    <div className="flex-1 p-4 text-left">
+                      <h3 className="text-white font-semibold text-lg mb-1">{museum.name}</h3>
+                      <div className="flex items-center gap-1 text-gray-400 text-sm mb-2">
+                        <MapPin className="w-4 h-4" />
+                        <span>{museum.location}</span>
+                      </div>
+                      <div className="text-amber-400 text-sm font-medium">
+                        {museum.artifacts} artifacts available
+                      </div>
+                    </div>
+                    {selected === museum.id && (
+                      <div className="flex items-center pr-4">
+                        <div className="w-8 h-8 rounded-full bg-amber-400 flex items-center justify-center shadow-lg shadow-amber-400/30">
+                          <Check className="w-5 h-5 text-black" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Selected museum info */}
+        {selectedMuseum && (
+          <div className="backdrop-blur-2xl bg-white/[0.02] border border-amber-400/50 rounded-2xl p-4 mb-4 shadow-xl">
+            <div className="flex items-center gap-3">
+              <img
+                src={selectedMuseum.image}
+                alt={selectedMuseum.name}
+                className="w-16 h-16 object-cover rounded-xl"
+              />
+              <div className="flex-1">
+                <h3 className="text-white font-semibold">{selectedMuseum.name}</h3>
+                <p className="text-gray-400 text-sm">{selectedMuseum.location}</p>
+                <p className="text-amber-400 text-sm">{selectedMuseum.artifacts} artifacts</p>
+              </div>
+              <div className="w-8 h-8 rounded-full bg-amber-400 flex items-center justify-center">
+                <Check className="w-5 h-5 text-black" />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Confirm button */}
+        <Button
+          onClick={handleConfirm}
+          disabled={!selected}
+          className="w-full bg-amber-400 hover:bg-amber-500 text-black font-semibold py-6 rounded-xl text-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-amber-400/20"
+        >
+          Confirm Selection
+        </Button>
+      </div>
+    </div>
+  );
+}
